@@ -4,7 +4,7 @@ A mindfulness/gratitude check-in app, created as the final project for CSC-6302 
 
 ## Overview
 
-Northflow is a Flask-based web application that allows users to track their daily mindfulness and gratitude through customizable check-in questions. The application uses MySQL for data persistence and provides a clean, user-friendly interface for managing personal wellness routines.
+NorthFlow is a Flask-based web application that allows users to track their daily mindfulness and gratitude through customizable check-in questions. The application uses MySQL for data persistence and provides a clean, user-friendly interface for managing personal wellness routines.
 
 ## Features
 
@@ -92,7 +92,7 @@ The application will be available at `http://localhost:5000`
 
 #### Project Structure
 
-```
+```text
 northflow/
 ├── app/
 │   ├── __init__.py          # Flask application factory
@@ -119,24 +119,15 @@ northflow/
 └── requirements.txt         # Python dependencies
 ```
 
-#### Configuration
-
-The application supports multiple configuration environments:
-
-- `development`: Debug mode enabled
-- `production`: Debug mode disabled
-- `testing`: Testing configuration
-
-Set the environment using the `FLASK_ENV` variable in your `.env` file.
-
 #### Linting
 
-Run linters for Python and SQL:
+Run linters using Invoke:
 
 ```bash
 invoke lint          # Lint both Python and SQL
-invoke lint-python   # Lint Python only (using ruff)
-invoke lint-sql      # Lint SQL only (using sqlfluff)
+invoke lint_python   # Lint Python only (using ruff)
+invoke lint_sql      # Lint SQL only (using sqlfluff)
+invoke lint_html     # Lint HTML templates only (using djlint)
 ```
 
 ## Technologies Used
