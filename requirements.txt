@@ -3,3 +3,4 @@ invoke>=2.2.0
 ruff>=0.1.0
 sqlfluff>=3.0.0
 mysql-connector-python>=8.0.0
+python-dotenv>=1.0.0

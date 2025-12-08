@@ -2,7 +2,7 @@ import logging
 import os
 
 import mysql.connector
-from constants import DATABASE
+from .constants import DATABASE
 
 
 class DatabaseError(Exception):
@@ -10,12 +10,12 @@ class DatabaseError(Exception):
 
 
 class DatabaseConnection:
-    def __init__(self, host=None, user=None, password=None, database=None):
+    def __init__(self):
         try:
             self.connection = mysql.connector.connect(
-                host=host or os.getenv("DB_HOST", "localhost"),
-                user=user or os.getenv("DB_USER", "root"),
-                password=password or os.getenv("DB_PASSWORD"),
+                host=os.getenv("DB_HOST", "localhost"),
+                user=os.getenv("DB_USER", "root"),
+                password=os.getenv("DB_PASSWORD"),
                 database=DATABASE,
             )
             self.cursor = self.connection.cursor(dictionary=True)
