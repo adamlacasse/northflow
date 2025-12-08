@@ -1,6 +1,11 @@
+# Flask and web framework
+Flask>=3.0.0
+Flask-SQLAlchemy>=3.0.0
+
 # Core dependencies
 invoke>=2.2.0
 ruff>=0.1.0
 sqlfluff>=3.0.0
+djlint>=1.34.0
 mysql-connector-python>=8.0.0
 python-dotenv>=1.0.0
