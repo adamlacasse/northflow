@@ -1,9 +1,14 @@
-"""Application configuration."""
-
 import os
 from dotenv import load_dotenv
 
+
 load_dotenv()
+
+
+"""
+Multiple environments will be a future enhancement.
+For CSC-6302, a single configuration environment is used.
+"""
 
 
 class Config:
@@ -27,21 +32,21 @@ class DevelopmentConfig(Config):
     DEBUG = True
 
 
-class ProductionConfig(Config):
-    """Production configuration."""
-
-    DEBUG = False
-
-
 class TestingConfig(Config):
     """Testing configuration."""
 
     TESTING = True
 
 
+class ProductionConfig(Config):
+    """Production configuration."""
+
+    DEBUG = False
+
+
 config = {
     "development": DevelopmentConfig,
-    "production": ProductionConfig,
     "testing": TestingConfig,
+    "production": ProductionConfig,
     "default": DevelopmentConfig,
 }
