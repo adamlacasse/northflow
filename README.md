@@ -4,150 +4,120 @@ A mindfulness/gratitude check-in app, created as the final project for CSC-6302 
 
 ## Overview
 
-NorthFlow is a Flask-based web application that allows users to track their daily mindfulness and gratitude through customizable check-in questions. The application uses MySQL for data persistence and provides a clean, user-friendly interface for managing personal wellness routines.
+NorthFlow currently provides:
 
-## Features
+- A Flask app factory (`app/__init__.py`) that wires configuration, routes, and assets.
+- A `DatabaseConnection` helper (`app/models/dal.py`) that wraps `mysql-connector-python` and standardizes error handling through `DatabaseError`.
+- A simple landing page plus a `/health` endpoint that validates the database connection at runtime.
+- A MySQL schema (`app/database/schema.sql`) that captures users, custom questions, check-ins, and answers for future feature work.
 
-- **User Management**: Create and manage user profiles
-- **Custom Questions**: Users can create personalized check-in questions
-- **Daily Check-ins**: Record responses to questions with text answers and optional scores
-- **Data Tracking**: Track check-ins over time with timestamps and notes
-- **Responsive Design**: Clean UI built with HTML/CSS/JavaScript
+While the database schema anticipates full CRUD features, the live UI is intentionally minimal so the focus can remain on the DAL, routing, and deployment pipeline.
 
-## Database Schema
+## Architecture at a Glance
 
-The application uses MySQL with the following tables:
+- **Application entry point**: `run.py` creates the Flask app using the `FLASK_ENV` (defaults to `development`) and serves it on `0.0.0.0:5000`.
+- **Configuration**: `config.py` loads environment variables via `python-dotenv` and defines `DevelopmentConfig`, `TestingConfig`, and `ProductionConfig` classes. All rely on the `northflow` database by default.
+- **Blueprints**: `app/routes/main.py` exposes `GET /` (landing page) and `GET /health` (DB connectivity check that returns JSON with HTTP 200/503).
+- **Templates & static assets**: `app/templates` plus `app/static/{css,js,images}` provide the UI shell; styles and scripts are deliberately minimal and easy to extend.
+- **Data layer**: `DatabaseConnection` supplies helpers for `execute_query`, stored procedures, commits, and teardown with consistent logging.
+- **Testing**: `tests/test_connection.py` exercises the DAL, verifying that connections, queries, and error handling behave as expected.
 
-- `users`: User profile information
-- `user_questions`: Customizable check-in questions per user
-- `checkins`: Individual check-in sessions
-- `answers`: Responses to questions for each check-in
-
-## Setup
+## Getting Started
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- MySQL 8.0 or higher
-- pip
+- Python 3.8+
+- MySQL 8.0+
+- `pip`
 
 ### Installation
-
-<!-- markdownlint-disable MD029 -->
-1. Clone the repository:
 
 ```bash
 git clone https://github.com/adamlacasse/northflow.git
 cd northflow
+
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt          # runtime deps
+pip install -e .[dev]                    # optional: dev/test tooling
 ```
 
-2. Create a virtual environment:
+### Configuration
 
-```bash
-python -m venv venv
-```
-
-3. Activate the virtual environment:
-
-```bash
-# On macOS/Linux:
-source venv/bin/activate
-
-# On Windows:
-venv\Scripts\activate
-```
-
-4. Install the package and dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-This installs the `northflow` package in editable mode along with all dependencies defined in `pyproject.toml`.
-
-5. Create a `.env` file in the project root with your database configuration:
+Create a `.env` file in the project root (It will be loaded automatically by `config.py`):
 
 ```env
 DB_HOST=localhost
 DB_USER=your_mysql_user
 DB_PASSWORD=your_mysql_password
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=change-me
 FLASK_ENV=development
 ```
 
-6. Set up the database:
+### Database Initialization
 
 ```bash
-mysql -u your_mysql_user -p < app/database/schema.sql
+mysql -u $DB_USER -p < app/database/schema.sql
 ```
 
-### Running the Application
+The script creates the `northflow` database and the `users`, `user_questions`, `checkins`, and `answers` tables.
 
-Start the Flask development server:
+## Running the App
 
 ```bash
 python run.py
 ```
 
-The application will be available at `http://localhost:5000`
+Visit `http://localhost:5000` for the landing page.
 
-### Development
+Health endpoint (requires DB connectivity):
 
-#### Project Structure
+```bash
+curl http://localhost:5000/health
+# -> {"status": "healthy", "database": "connected"}
+```
+
+## Tooling & Quality Gates
+
+- `invoke lint` – run Ruff (Python), SQLFluff (SQL), and djlint (HTML/Jinja) with auto-fix enabled.
+- `invoke lint_python` – Python-only lint/format.
+- `invoke lint_sql` – SQL formatting/linting for `app/database`.
+- `invoke lint_html` – Template lint/format pass via djlint.
+- `pytest tests/` – runs the DAL test suite (requires a reachable DB defined by your `.env`).
+
+## Project Structure
 
 ```text
-northflow/
-├── app/
-│   ├── __init__.py          # Flask application factory
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── dal.py           # Data Access Layer
-│   ├── routes/
-│   │   ├── __init__.py
-│   │   └── main.py          # Main application routes
-│   ├── static/
-│   │   ├── css/
-│   │   │   └── style.css
-│   │   ├── js/
-│   │   │   └── main.js
-│   │   └── images/
-│   ├── templates/
-│   │   ├── base.html
-│   │   └── index.html
-│   └── database/
-│       └── schema.sql       # Database schema
-├── tests/
-│   └── test_connection.py   # Database connection tests
-├── config.py                # Application configuration
-├── run.py                   # Application entry point
-├── tasks.py                 # Invoke tasks for linting
-├── pyproject.toml           # Project metadata and dependencies
-#### Linting
-
-Run linters using Invoke:
-
-```bash
-invoke lint          # Lint both Python and SQL
-invoke lint_python   # Lint Python only (using ruff)
-invoke lint_sql      # Lint SQL only (using sqlfluff)
-invoke lint_html     # Lint HTML templates only (using djlint)
+app/
+├── __init__.py          # Flask app factory
+├── database/
+│   └── schema.sql       # MySQL schema bootstrap
+├── models/
+│   ├── __init__.py
+│   └── dal.py           # DatabaseConnection + DatabaseError
+├── routes/
+│   ├── __init__.py
+│   └── main.py          # Landing + /health endpoints
+├── static/
+│   ├── css/style.css    # Base styles
+│   ├── js/main.js       # Placeholder JS hooks
+│   └── images/
+└── templates/
+    ├── base.html        # Layout shell
+    └── index.html       # Hero + features copy
+config.py                # Environment-aware settings
+run.py                   # App entry point
+tasks.py                 # Invoke linting helpers
+tests/test_connection.py # DAL regression tests
 ```
 
-#### Testing
+## Future Enhancements
 
-```bash
-pip install -e ".[dev]" # Install dev dependencies if needed
-pytest tests/
-```
-
-## Technologies Used
-
-- **Backend**: Flask 3.0+
-- **Database**: MySQL 8.0+ with mysql-connector-python
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Dev Tools**: Ruff (Python linting), SQLFluff (SQL linting), djlint (template linting)
-- **Task Runner**: Invoke
+- Flesh out CRUD routes that exercise the existing schema (users, questions, check-ins, answers).
+- Add authentication and session management on top of the current UI shell.
+- Expand the frontend with dashboards fed by DAL metrics/APIs.
 
 ## License
 
-See LICENSE file for details.
+Released under the MIT License. See `LICENSE` for details.
