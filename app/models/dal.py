@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import mysql.connector
 from config import Config
@@ -22,16 +23,18 @@ class DatabaseConnection:
             logging.error(f"Database connection failed with error: {e}")
             raise DatabaseError(f"Database connection failed: {e}") from e
 
-    def execute_query(self, query, params=()):
+    def execute_query(self, query: str, params: tuple = ()) -> list[dict[str, Any]]:
         """Execute a SELECT query and return results as list of dictionaries."""
         try:
             self.cursor.execute(query, params)
-            return self.cursor.fetchall()
+            return self.cursor.fetchall()  # type: ignore[return-value]
         except Exception as e:
             logging.error(f"Database query failed with error: {e}")
             raise DatabaseError(f"Query failed: {e}") from e
 
-    def call_procedure(self, proc_name, params=()):
+    def call_procedure(
+        self, proc_name: str, params: tuple = ()
+    ) -> list[dict[str, Any]]:
         try:
             self.cursor.callproc(proc_name, params)
             results = []

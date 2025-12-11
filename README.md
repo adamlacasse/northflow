@@ -33,6 +33,7 @@ The application uses MySQL with the following tables:
 
 ### Installation
 
+<!-- markdownlint-disable MD029 -->
 1. Clone the repository:
 
 ```bash
