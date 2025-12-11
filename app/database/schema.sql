@@ -14,6 +14,9 @@ CREATE TABLE user_questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     question_text TEXT NOT NULL,
+    question_type ENUM(
+        'text', 'scale_1_5', 'number', 'boolean'
+    ) NOT NULL DEFAULT 'text',
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     sort_order INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -35,12 +38,12 @@ CREATE TABLE checkins (
 );
 
 CREATE TABLE answers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
     checkin_id INT NOT NULL,
     question_id INT NOT NULL,
     answer_text TEXT,
-    score TINYINT,
+    score DECIMAL(5, 2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (checkin_id, question_id),
     CONSTRAINT fk_answers_checkin
     FOREIGN KEY (checkin_id)
     REFERENCES checkins (id)
@@ -48,7 +51,5 @@ CREATE TABLE answers (
     CONSTRAINT fk_answers_question
     FOREIGN KEY (question_id)
     REFERENCES user_questions (id)
-    ON DELETE CASCADE,
-    CONSTRAINT unique_checkin_question
-    UNIQUE (checkin_id, question_id)
+    ON DELETE CASCADE
 );
