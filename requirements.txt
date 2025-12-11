@@ -1,13 +1,5 @@
-# Flask and web framework
-Flask>=3.0.0
-Flask-SQLAlchemy>=3.0.0
+# Install package and all dependencies from pyproject.toml
+-e .
 
-# Core dependencies
-mysql-connector-python>=8.0.0
-python-dotenv>=1.0.0
-invoke>=2.2.0
-
-# Linting and formatting tools
-ruff>=0.1.0
-sqlfluff>=3.0.0
-djlint>=1.34.0  # python-installed-packages-checker: ignore
+# Development tools
+-e .[dev]

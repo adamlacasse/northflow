@@ -1,6 +1,7 @@
 """Main routes blueprint."""
 
 from flask import Blueprint, render_template
+
 from app.models import DatabaseConnection, DatabaseError
 
 bp = Blueprint("main", __name__)

@@ -2,7 +2,18 @@ import logging
 from typing import Any
 
 import mysql.connector
-from config import Config
+
+try:
+    from config import Config
+except ModuleNotFoundError:
+    import sys
+    from pathlib import Path
+
+    # Add project root to path if not already there
+    project_root = Path(__file__).parent.parent.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+    from config import Config
 
 
 class DatabaseError(Exception):

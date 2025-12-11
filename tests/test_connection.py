@@ -1,68 +1,58 @@
-#!/usr/bin/env python3
 """
-Test script to verify database connection and DAL functionality.
-Run from project root: python test_connection.py
+Test suite for database connection and DAL functionality.
+Run with: pytest tests/
 """
 
-import logging
-import sys
+import pytest
 from dotenv import load_dotenv
+
 from app.models import DatabaseConnection, DatabaseError
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+
+@pytest.fixture(scope="module")
+def db_connection():
+    """Fixture to provide a database connection for tests."""
+    db = DatabaseConnection()
+    yield db
+    db.close()
 
 
-def main():
-    logging.info("Starting database connection test...")
-
-    try:
-        # Test database connection
-        logging.info("Attempting to connect to database...")
-        db = DatabaseConnection()
-        logging.info("✓ Database connection successful!")
-
-        # Test simple query
-        logging.info("Testing query execution...")
-        result = db.execute_query("SELECT DATABASE() as current_db")
-        logging.info("✓ Query executed successfully!")
-        logging.info(f"  Current database: {result[0]['current_db']}")
-
-        # Test table existence
-        logging.info("Checking for tables...")
-        tables = db.execute_query("SHOW TABLES")
-        if tables:
-            logging.info(f"✓ Found {len(tables)} tables:")
-            for table in tables:
-                table_name = list(table.values())[0]
-                logging.info(f"  - {table_name}")
-        else:
-            logging.warning("  No tables found. You may need to run schema.sql")
-
-        # Clean up
-        db.close()
-        logging.info("✓ Connection closed successfully!")
-        logging.info("\n🎉 All tests passed!")
-        return 0
-
-    except DatabaseError as e:
-        logging.error(f"✗ Database error: {e}")
-        logging.error("\nMake sure:")
-        logging.error("  1. MySQL is running")
-        logging.error("  2. Database 'northflow' exists (run src/database/schema.sql)")
-        logging.error(
-            "  3. Environment variables are set (DB_HOST, DB_USER, DB_PASSWORD)"
-        )
-        return 1
-    except Exception as e:
-        logging.error(f"✗ Unexpected error: {e}")
-        return 1
+def test_database_connection():
+    """Test that we can establish a database connection."""
+    db = DatabaseConnection()
+    assert db is not None
+    assert db.connection is not None
+    db.close()
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+def test_query_current_database(db_connection):
+    """Test that we can execute a simple query to get current database."""
+    result = db_connection.execute_query("SELECT DATABASE() as current_db")
+    assert result is not None
+    assert len(result) > 0
+    assert result[0]["current_db"] == "northflow"
+
+
+def test_show_tables(db_connection):
+    """Test that we can query for tables in the database."""
+    tables = db_connection.execute_query("SHOW TABLES")
+    assert tables is not None
+    assert isinstance(tables, list)
+    # Note: This may be empty if schema hasn't been initialized
+
+
+def test_connection_close():
+    """Test that we can properly close a database connection."""
+    db = DatabaseConnection()
+    db.close()
+    # Verify connection is closed by checking the connection state
+    assert not db.connection.is_connected()
+
+
+def test_database_error_on_invalid_query(db_connection):
+    """Test that invalid queries raise DatabaseError."""
+    with pytest.raises(DatabaseError):
+        db_connection.execute_query("SELECT * FROM nonexistent_table_xyz123")

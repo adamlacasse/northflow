@@ -57,11 +57,13 @@ source venv/bin/activate
 venv\Scripts\activate
 ```
 
-4. Install dependencies:
+4. Install the package and dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+This installs the `northflow` package in editable mode along with all dependencies defined in `pyproject.toml`.
 
 5. Create a `.env` file in the project root with your database configuration:
 
@@ -114,12 +116,12 @@ northflow/
 │   │   └── index.html
 │   └── database/
 │       └── schema.sql       # Database schema
+├── tests/
+│   └── test_connection.py   # Database connection tests
 ├── config.py                # Application configuration
 ├── run.py                   # Application entry point
 ├── tasks.py                 # Invoke tasks for linting
-└── requirements.txt         # Python dependencies
-```
-
+├── pyproject.toml           # Project metadata and dependencies
 #### Linting
 
 Run linters using Invoke:
@@ -129,6 +131,13 @@ invoke lint          # Lint both Python and SQL
 invoke lint_python   # Lint Python only (using ruff)
 invoke lint_sql      # Lint SQL only (using sqlfluff)
 invoke lint_html     # Lint HTML templates only (using djlint)
+```
+
+#### Testing
+
+```bash
+pip install -e ".[dev]" # Install dev dependencies if needed
+pytest tests/
 ```
 
 ## Technologies Used

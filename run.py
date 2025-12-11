@@ -2,6 +2,7 @@
 """Run the Flask application."""
 
 import os
+
 from app import create_app
 
 # Create app with environment-based configuration
