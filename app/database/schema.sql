@@ -1,3 +1,5 @@
+DROP DATABASE IF EXISTS northflow;
+
 CREATE DATABASE northflow;
 USE northflow;
 
@@ -53,3 +55,29 @@ CREATE TABLE answers (
     REFERENCES user_questions (id)
     ON DELETE CASCADE
 );
+
+-- Views/procedures/functions >>>
+
+CREATE VIEW user_daily_summary AS
+SELECT
+    u.id AS user_id,
+    u.first_name,
+    u.last_name,
+    DATE(c.checkin_time) AS checkin_date,
+    COUNT(DISTINCT c.id) AS total_checkins,
+    COUNT(a.question_id) AS total_answers,
+    AVG(a.score) AS avg_score,
+    MIN(a.score) AS min_score,
+    MAX(a.score) AS max_score
+FROM users AS u
+LEFT JOIN checkins AS c
+    ON u.id = c.user_id
+LEFT JOIN answers AS a
+    ON c.id = a.checkin_id
+GROUP BY
+    u.id,
+    u.first_name,
+    u.last_name,
+    DATE(c.checkin_time)
+ORDER BY
+    checkin_date DESC;
