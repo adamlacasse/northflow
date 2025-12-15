@@ -508,12 +508,3 @@ GROUP BY
     DATE(c.checkin_time)
 ORDER BY
     checkin_date DESC;
-
-SELECT * FROM user_daily_summary;
-
-
-SELECT *
-FROM answers AS a
-INNER JOIN checkins AS c ON a.checkin_id = c.id
-INNER JOIN user_questions AS uq ON a.question_id = uq.id
-WHERE uq.question_type = 'scale_1_5';
