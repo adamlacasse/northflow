@@ -10,12 +10,13 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Adam Lacasse"}
+    {name = "Adam LaCasse"}
 ]
+
 dependencies = [
     "Flask>=3.0.0",
     "Flask-SQLAlchemy>=3.0.0",
-    "mysql-connector-python>=8.0.0",
+    "mysql-connector-python>=8.0.14",
     "python-dotenv>=1.0.0",
     "invoke>=2.2.0",
 ]

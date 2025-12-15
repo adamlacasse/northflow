@@ -56,11 +56,13 @@ FLASK_ENV=development
 
 ### Database Initialization
 
+Use the project helper to apply the schema with the credentials in your `.env` file:
+
 ```bash
-mysql -u $DB_USER -p < app/database/schema.sql
+invoke execute_schema
 ```
 
-The script creates the `northflow` database and the `users`, `user_questions`, `checkins`, and `answers` tables.
+The command runs `app/database/setup_schema.py`, creating the `northflow` database plus the `users`, `user_questions`, `checkins`, and `answers` tables. If you prefer to run the SQL manually, you can still execute `mysql -u $DB_USER -p < app/database/schema.sql`.
 
 ## Running the App
 
@@ -92,6 +94,7 @@ app/
 ├── __init__.py          # Flask app factory
 ├── database/
 │   └── schema.sql       # MySQL schema bootstrap
+│   └── setup_schema.py  # Schema application helper
 ├── models/
 │   ├── __init__.py
 │   └── dal.py           # DatabaseConnection + DatabaseError
