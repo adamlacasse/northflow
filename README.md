@@ -59,7 +59,7 @@ FLASK_ENV=development
 Use the project helper to apply the schema with the credentials in your `.env` file:
 
 ```bash
-invoke execute_schema
+invoke execute-schema
 ```
 
 The command runs `app/database/setup_schema.py`, creating the `northflow` database plus the `users`, `user_questions`, `checkins`, and `answers` tables. If you prefer to run the SQL manually, you can still execute `mysql -u $DB_USER -p < app/database/schema.sql`.
@@ -82,9 +82,9 @@ curl http://localhost:5000/health
 ## Tooling & Quality Gates
 
 - `invoke lint` – run Ruff (Python), SQLFluff (SQL), and djlint (HTML/Jinja) with auto-fix enabled.
-- `invoke lint_python` – Python-only lint/format.
-- `invoke lint_sql` – SQL formatting/linting for `app/database`.
-- `invoke lint_html` – Template lint/format pass via djlint.
+- `invoke lint-python` – Python-only lint/format.
+- `invoke lint-sql` – SQL formatting/linting for `app/database`.
+- `invoke lint-html` – Template lint/format pass via djlint.
 - `pytest tests/` – runs the DAL test suite (requires a reachable DB defined by your `.env`).
 
 ## Project Structure
