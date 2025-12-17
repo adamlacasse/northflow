@@ -90,16 +90,16 @@ def execute_schema():
     for i, statement in enumerate(statements, 1):
         try:
             _execute_statement(cursor, statement)
-            print(f"Code block [{i}/{len(statements)}] ✓")
+            print(f"Code block [{i}/{len(statements)}] OK")
         except mysql.connector.Error as err:
-            print(f"Code block [{i}/{len(statements)}] ✗ Error: {err}")
+            print(f"Code block [{i}/{len(statements)}] ERROR: {err}")
             print(f"Statement: {statement[:100]}...")
             raise
 
     connection.commit()
     cursor.close()
     connection.close()
-    print(f"\n✓ Schema executed successfully! ({len(statements)} statements)")
+    print(f"\nSUCCESS: Schema executed successfully! ({len(statements)} statements)")
 
 
 if __name__ == "__main__":
