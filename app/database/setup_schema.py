@@ -1,5 +1,5 @@
 """
-Simple script to read and execute schema.sql with delimiter support.
+Script to read and execute schema.sql with delimiter support.
 """
 
 import os
