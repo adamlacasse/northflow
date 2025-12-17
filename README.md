@@ -110,13 +110,12 @@ app/
     └── index.html       # Hero + features copy
 config.py                # Environment-aware settings
 run.py                   # App entry point
-tasks.py                 # Invoke linting helpers
+tasks.py                 # Invoke task helpers
 tests/test_connection.py # DAL regression tests
 ```
 
 ## Future Enhancements
 
-- Flesh out CRUD routes that exercise the existing schema (users, questions, check-ins, answers).
 - Add authentication and session management on top of the current UI shell.
 - Expand the frontend with dashboards fed by DAL metrics/APIs.
 
