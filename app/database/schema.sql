@@ -508,3 +508,65 @@ GROUP BY
     DATE(c.checkin_time)
 ORDER BY
     checkin_date DESC;
+
+DELIMITER $$
+
+CREATE PROCEDURE add_user_question (
+    IN p_user_id INT,
+    IN p_question_text TEXT,
+    IN p_question_type ENUM('text', 'scale_1_5', 'number', 'boolean'),
+    IN p_is_active TINYINT(1),
+    IN p_sort_order INT
+)
+BEGIN
+    INSERT INTO user_questions
+    (user_id, question_text, question_type, is_active, sort_order)
+    VALUES
+    (p_user_id, p_question_text, p_question_type, p_is_active, p_sort_order);
+END$$
+
+CREATE FUNCTION update_user_question (
+    p_question_id INT,
+    p_question_text TEXT,
+    p_question_type ENUM('text', 'scale_1_5', 'number', 'boolean'),
+    p_is_active TINYINT(1),
+    p_sort_order INT
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE question_exists INT;
+    
+    -- Check if question exists
+    SELECT COUNT(*) INTO question_exists
+    FROM user_questions
+    WHERE id = p_question_id;
+    
+    -- If question doesn't exist, return 0 (failure)
+    IF question_exists = 0 THEN
+        RETURN 0;
+    END IF;
+    
+    -- Update the question
+    UPDATE user_questions
+    SET
+        question_text = p_question_text,
+        question_type = p_question_type,
+        is_active = p_is_active,
+        sort_order = p_sort_order,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = p_question_id;
+
+    -- Return 1 (success)
+    RETURN 1;
+END$$
+
+CREATE PROCEDURE delete_user_question (
+    IN p_question_id INT
+)
+BEGIN
+    DELETE FROM user_questions
+    WHERE id = p_question_id;
+END$$
+
+DELIMITER ;
