@@ -25,3 +25,9 @@ def lint_sql(ctx):
 def lint_html(ctx):
     """Lint HTML/Jinja2 templates only"""
     ctx.run("djlint --reformat --lint app/templates/")
+
+
+@task
+def execute_schema(ctx):
+    """Execute the database schema SQL file"""
+    ctx.run("python app/database/setup_schema.py")
