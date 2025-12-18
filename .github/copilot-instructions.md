@@ -1,7 +1,9 @@
 # NorthFlow - AI Coding Agent Instructions
 
 ## Project Overview
-NorthFlow is a Flask-based mindfulness/gratitude check-in app built for CSC-6302 Database Principles. The project emphasizes a clean DAL pattern, multi-dialect linting, and environment-based configuration. The UI is intentionally minimal—focus is on database interaction, error handling, and deployment readiness.
+NorthFlow is a Flask-based mindfulness/gratitude check-in app built as the first MVP for a CSC-6302 Database Principles course project. The project emphasizes a clean DAL pattern, multi-dialect linting, and environment-based configuration. The UI is intentionally minimal—focus is on database interaction, error handling, and deployment readiness. See `.agent/AGENT_CONTEXT.md` for the course rubric and deliverable constraints.
+
+Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVANCED_FEATURE.md).
 
 ## Architecture & Key Components
 
@@ -86,6 +88,9 @@ NorthFlow is a Flask-based mindfulness/gratitude check-in app built for CSC-6302
 - **Test fixtures**: `tests/test_connection.py` (module-scoped DB fixture)
 - **Task automation**: `tasks.py` (invoke commands for lint/schema)
 - **Schema with seed data**: `app/database/schema.sql` (includes stored procs)
+
+## Documentation scope
+- README is human-facing and should track the current state of the application so others can run it locally; avoid embedding todos or historical notes there.
 
 ## Extended Context
 - **`.agent` folder**: Contains larger application context and documentation that continues to be iterated on

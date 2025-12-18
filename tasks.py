@@ -7,6 +7,7 @@ def lint(ctx):
     ctx.run("ruff check --fix . && ruff format .")
     ctx.run("sqlfluff fix --dialect mysql app/database/")
     ctx.run("djlint --reformat --lint app/templates/")
+    ctx.run("pymarkdown scan .")
 
 
 @task
@@ -25,6 +26,12 @@ def lint_sql(ctx):
 def lint_html(ctx):
     """Lint HTML/Jinja2 templates only"""
     ctx.run("djlint --reformat --lint app/templates/")
+
+
+@task
+def lint_markdown(ctx):
+    """Lint Markdown files only"""
+    ctx.run("pymarkdown scan .")
 
 
 @task

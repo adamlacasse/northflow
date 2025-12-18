@@ -1,0 +1,11 @@
+{
+  "plugins": [],
+  "defaultIgnore": [
+    ".venv/",
+    "northflow.egg-info/"
+  ],
+  "rules": {
+    "md013": { "line_length": 100 },
+    "md026": { "punctuation": ".,;:!?" }
+  }
+}

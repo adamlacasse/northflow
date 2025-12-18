@@ -5,6 +5,16 @@
 NorthFlow is a Flask-based mindfulness/gratitude check-in app created for CSC-6302 Database Principles.
 The live UI is intentionally minimal; the focus is the MySQL schema + Python DAL + deployment/quality gates.
 
+## Course project deliverables (per assignment)
+
+- Part 1 (planning): ER diagram plus written responses; no AI assistance for diagram/answers.
+- Part 2 (database): single SQL file; ≥4 tables with data; ≥2 FKs; ≥1 composite PK (not a lone int id); 3NF; datatype coverage (datetime, numeric/decimal, enum, boolean/tinyint); largest table ≥30 rows; aggregated view/procedure; add/update/delete procedures with cascading changes; data should be viewer-friendly; use stored routines/views to support advanced feature.
+- Part 3 (GUI app): zip submission; README with run steps and advanced feature; ≥3 modules separating view/business logic/DAL; only DAL hits DB via stored routines/views; connection info entered at login (host/port editable, db name ok to fix); GUI must show status/errors; login gate before data; ability to add/update/delete rows and view data with live reflection; advanced feature (e.g., export/import/filter/charts/API); app must not crash.
+
+Advanced feature concept is tracked in [ADVANCED_FEATURE.md](ADVANCED_FEATURE.md).
+
+See TODOs tracked in `TODO.md` (project root) for current action items aligned to these deliverables.
+
 ## Where important stuff lives
 
 - MySQL schema bootstrap: `app/database/schema.sql`
