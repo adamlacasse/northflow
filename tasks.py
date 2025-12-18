@@ -31,7 +31,7 @@ def lint_html(ctx):
 @task
 def lint_markdown(ctx):
     """Lint Markdown files only"""
-    ctx.run("pymarkdown scan .")
+    ctx.run("pymarkdown scan --fix .")
 
 
 @task
