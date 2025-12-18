@@ -1,0 +1,69 @@
+{
+  "project": "northflow",
+  "language_stack": ["Python", "Flask", "MySQL"],
+  "schema_path": "app/database/schema.sql",
+  "db_name": "northflow",
+  "tables": {
+    "users": {
+      "pk": ["id"],
+      "columns": {
+        "id": "INT AUTO_INCREMENT",
+        "first_name": "VARCHAR(50)",
+        "last_name": "VARCHAR(50)",
+        "email": "VARCHAR(100) NOT NULL UNIQUE",
+        "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+      }
+    },
+    "user_questions": {
+      "pk": ["id"],
+      "fks": [{"column": "user_id", "ref": "users.id", "on_delete": "CASCADE"}],
+      "columns": {
+        "id": "INT AUTO_INCREMENT",
+        "user_id": "INT NOT NULL",
+        "question_text": "TEXT NOT NULL",
+        "question_type": "ENUM('text','scale_1_5','number','boolean') NOT NULL DEFAULT 'text'",
+        "is_active": "TINYINT(1) NOT NULL DEFAULT 1",
+        "sort_order": "INT NOT NULL DEFAULT 0",
+        "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+      }
+    },
+    "checkins": {
+      "pk": ["id"],
+      "fks": [{"column": "user_id", "ref": "users.id", "on_delete": "CASCADE"}],
+      "columns": {
+        "id": "INT AUTO_INCREMENT",
+        "user_id": "INT NOT NULL",
+        "checkin_time": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "notes": "TEXT"
+      }
+    },
+    "answers": {
+      "pk": ["checkin_id", "question_id"],
+      "fks": [
+        {"column": "checkin_id", "ref": "checkins.id", "on_delete": "CASCADE"},
+        {"column": "question_id", "ref": "user_questions.id", "on_delete": "CASCADE"}
+      ],
+      "columns": {
+        "checkin_id": "INT NOT NULL",
+        "question_id": "INT NOT NULL",
+        "answer_text": "TEXT",
+        "score": "DECIMAL(5,2)",
+        "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+      }
+    }
+  },
+  "reader_objects": {
+    "view": {
+      "name": "user_daily_summary",
+      "aggregates": ["COUNT", "AVG", "MIN", "MAX"],
+      "group_by": ["u.id", "DATE(c.checkin_time)"]
+    }
+  },
+  "seed": {
+    "largest_table": "answers",
+    "min_rows": 30,
+    "id_policy": "no hardcoded numeric ids; session variables ok"
+  }
+}

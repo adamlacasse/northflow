@@ -64,6 +64,10 @@ invoke execute-schema
 
 The command runs `app/database/setup_schema.py`, creating the `northflow` database plus the `users`, `user_questions`, `checkins`, and `answers` tables. If you prefer to run the SQL manually, you can still execute `mysql -u $DB_USER -p < app/database/schema.sql`.
 
+### Stored Routines
+
+`schema.sql` includes stored procedures for adding/updating/deleting `user_questions` to demonstrate CRUD patterns in MySQL.
+
 ## Running the App
 
 ```bash
