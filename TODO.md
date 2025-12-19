@@ -1,5 +1,11 @@
 # NorthFlow TODOs (course alignment)
 
+## Short session plan (deadline: tomorrow afternoon)
+
+- Session 1 (≤60 min): Validate schema end-to-end with `invoke execute-schema`, ensure rubric items hold (≥30 answers, procs/views intact), note gaps.
+- Session 2 (≤60 min): Implement login gate collecting DB host/port/user/password, enforce layering, build CRUD UI for `user_questions` via stored procs with live refresh.
+- Session 3 (≤60 min): Surface advanced feature in UI (e.g., display/filter/export `user_daily_summary`), add targeted tests/docs, run full lint sweep.
+
 ## Course alignment checkpoints
 
 - Verify Part 2 rubric stays satisfied: schema.sql runs clean via
