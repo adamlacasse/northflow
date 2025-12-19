@@ -11,6 +11,7 @@
 - Verify Part 2 rubric stays satisfied: schema.sql runs clean via
   `invoke execute-schema`, answers table maintains >=30 rows, view
   `user_daily_summary` aggregates, add/update/delete procs present.
+  **Status:** manual schema checks complete.
 - Choose and document the Part 3 advanced feature (see
   `ADVANCED_FEATURE.md` for the current concept, e.g., export
   `user_daily_summary` to CSV, client-side filter, charting) and plan
