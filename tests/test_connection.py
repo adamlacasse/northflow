@@ -15,14 +15,14 @@ load_dotenv()
 @pytest.fixture(scope="module")
 def db_connection():
     """Fixture to provide a database connection for tests."""
-    db = DatabaseConnection()
+    db = DatabaseConnection(allow_raw_sql=True)
     yield db
     db.close()
 
 
 def test_database_connection():
     """Test that we can establish a database connection."""
-    db = DatabaseConnection()
+    db = DatabaseConnection(allow_raw_sql=True)
     assert db is not None
     assert db.connection is not None
     db.close()
@@ -46,7 +46,7 @@ def test_show_tables(db_connection):
 
 def test_connection_close():
     """Test that we can properly close a database connection."""
-    db = DatabaseConnection()
+    db = DatabaseConnection(allow_raw_sql=True)
     db.close()
     # Verify connection is closed by checking the connection state
     assert not db.connection.is_connected()

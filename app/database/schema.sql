@@ -830,6 +830,60 @@ ORDER BY
 -- noqa: disable=PRS
 DELIMITER $$
 
+CREATE PROCEDURE health_check ()
+BEGIN
+    SELECT 1 AS status;
+END$$
+
+CREATE PROCEDURE list_users ()
+BEGIN
+    SELECT
+        id,
+        first_name,
+        last_name,
+        email
+    FROM users
+    ORDER BY last_name, first_name;
+END$$
+
+CREATE PROCEDURE list_user_questions ()
+BEGIN
+    SELECT
+        uq.id,
+        uq.user_id,
+        CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+        uq.question_text,
+        uq.question_type,
+        uq.is_active,
+        uq.sort_order
+    FROM user_questions AS uq
+    JOIN users AS u ON u.id = uq.user_id
+    ORDER BY u.last_name, u.first_name, uq.sort_order, uq.id;
+END$$
+
+CREATE PROCEDURE list_daily_summary (
+    IN p_user_id INT,
+    IN p_start_date DATE,
+    IN p_end_date DATE
+)
+BEGIN
+    SELECT
+        user_id,
+        CONCAT(first_name, ' ', last_name) AS user_name,
+        checkin_date,
+        total_checkins,
+        total_answers,
+        avg_score,
+        min_score,
+        max_score
+    FROM user_daily_summary
+    WHERE
+        (p_user_id IS NULL OR user_id = p_user_id)
+        AND (p_start_date IS NULL OR checkin_date >= p_start_date)
+        AND (p_end_date IS NULL OR checkin_date <= p_end_date)
+    ORDER BY checkin_date DESC, user_name ASC;
+END$$
+
 CREATE PROCEDURE add_user_question (
     IN p_user_id INT,
     IN p_question_text TEXT,

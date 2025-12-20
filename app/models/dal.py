@@ -29,7 +29,9 @@ class DatabaseConnection:
         password: str | None = None,
         database: str | None = None,
         port: int | None = None,
+        allow_raw_sql: bool = False,
     ):
+        self.allow_raw_sql = allow_raw_sql
         try:
             self.connection = mysql.connector.connect(
                 host=host or Config.DB_HOST,
@@ -45,6 +47,13 @@ class DatabaseConnection:
 
     def execute_query(self, query: str, params: tuple = ()) -> list[dict[str, Any]]:
         """Execute a SELECT query and return results as list of dictionaries."""
+        if not self.allow_raw_sql:
+            raise DatabaseError(
+                """
+                Raw SQL execution is disabled. Use stored
+                procedures/views via call_procedure().
+                """
+            )
         try:
             self.cursor.execute(query, params)
             return self.cursor.fetchall()  # type: ignore[return-value]

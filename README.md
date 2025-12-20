@@ -45,7 +45,8 @@ and deployment pipeline.
 - **Data layer**: `DatabaseConnection` supplies helpers for
   `execute_query`, stored procedures, commits, and teardown with
   consistent logging. Business logic lives in `app/services`, including
-  `user_questions` (CRUD via stored procs) and `summary` (reads the
+  `user_questions` (CRUD + listing via stored procedures) and `summary`
+  (daily reporting via a stored procedure wrapper over the
   `user_daily_summary` view).
 - **Testing**: `tests/test_connection.py` exercises the DAL, verifying
   that connections, queries, and error handling behave as expected.

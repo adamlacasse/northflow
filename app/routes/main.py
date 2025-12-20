@@ -205,7 +205,7 @@ def delete_question_route(question_id: int):
 def health():
     try:
         db = DatabaseConnection()
-        db.execute_query("SELECT 1 as status")
+        db.call_procedure("health_check")
         db.close()
         return {"status": "healthy", "database": "connected"}, 200
     except DatabaseError as e:
