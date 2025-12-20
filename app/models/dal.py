@@ -21,13 +21,22 @@ class DatabaseError(Exception):
 
 
 class DatabaseConnection:
-    def __init__(self):
+    def __init__(
+        self,
+        *,
+        host: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
+        database: str | None = None,
+        port: int | None = None,
+    ):
         try:
             self.connection = mysql.connector.connect(
-                host=Config.DB_HOST,
-                user=Config.DB_USER,
-                password=Config.DB_PASSWORD,
-                database=Config.DATABASE,
+                host=host or Config.DB_HOST,
+                user=user or Config.DB_USER,
+                password=password or Config.DB_PASSWORD,
+                database=database or Config.DATABASE,
+                port=port or 3306,
             )
             self.cursor = self.connection.cursor(dictionary=True)
         except Exception as e:
@@ -45,13 +54,15 @@ class DatabaseConnection:
 
     def call_procedure(
         self, proc_name: str, params: tuple = ()
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], tuple[Any, ...]]:
+        """Execute a stored procedure, return result sets and updated params."""
+
         try:
-            self.cursor.callproc(proc_name, params)
-            results = []
+            updated_params = tuple(self.cursor.callproc(proc_name, params))
+            results: list[dict[str, Any]] = []
             for result in self.cursor.stored_results():
                 results.extend(result.fetchall())
-            return results
+            return results, updated_params
         except Exception as e:
             logging.error(f"Stored procedure call failed with error: {e}")
             logging.error(f"Procedure: {proc_name}, Parameters: {params}")

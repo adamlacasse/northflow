@@ -12,10 +12,14 @@ NorthFlow currently provides:
 - A `DatabaseConnection` helper (`app/models/dal.py`) that wraps
   `mysql-connector-python` and standardizes error handling through
   `DatabaseError`.
+- UI flows for database login, `user_questions` CRUD via stored
+  procedures, and a daily summary view over the `user_daily_summary`
+  view.
 - A simple landing page plus a `/health` endpoint that validates the
   database connection at runtime.
 - A MySQL schema (`app/database/schema.sql`) that captures users,
-  custom questions, check-ins, and answers for future feature work.
+  custom questions, check-ins, answers, and the `user_daily_summary`
+  aggregation view.
 
 While the database schema anticipates full CRUD features, the live UI
 is intentionally minimal so the focus can remain on the DAL, routing,
@@ -30,15 +34,19 @@ and deployment pipeline.
   `python-dotenv` and defines `DevelopmentConfig`, `TestingConfig`, and
   `ProductionConfig` classes. All rely on the `northflow` database by
   default.
-- **Blueprints**: `app/routes/main.py` exposes `GET /` (landing page)
-  and `GET /health` (DB connectivity check that returns JSON with HTTP
-  200/503).
+- **Blueprints**: `app/routes/main.py` exposes `GET /` (landing page),
+  `GET/POST /login` (DB connection gate), `GET /questions` with
+  supporting CRUD endpoints for `user_questions`, `GET /summary` for
+  the daily aggregation view, and `GET /health` (DB connectivity check
+  returning JSON 200/503).
 - **Templates & static assets**: `app/templates` plus `app/static/{css,
   js,images}` provide the UI shell; styles and scripts are deliberately
   minimal and easy to extend.
 - **Data layer**: `DatabaseConnection` supplies helpers for
   `execute_query`, stored procedures, commits, and teardown with
-  consistent logging.
+  consistent logging. Business logic lives in `app/services`, including
+  `user_questions` (CRUD via stored procs) and `summary` (reads the
+  `user_daily_summary` view).
 - **Testing**: `tests/test_connection.py` exercises the DAL, verifying
   that connections, queries, and error handling behave as expected.
 
@@ -102,6 +110,16 @@ python run.py
 
 Visit `http://localhost:5000` for the landing page.
 
+Login flow (DB connection required for data):
+
+- Go to `/login` and enter DB host, port, user, and password
+  (database name is fixed to `northflow`).
+- On success, you will be redirected to `/questions`.
+- Manage custom prompts at `/questions` (add/update/delete via stored
+  procedures with live refresh).
+- View aggregated daily stats at `/summary`, with optional user and
+  date filters sourced from the `user_daily_summary` view.
+
 Health endpoint (requires DB connectivity):
 
 ```bash
@@ -132,14 +150,19 @@ app/
 │   └── dal.py           # DatabaseConnection + DatabaseError
 ├── routes/
 │   ├── __init__.py
-│   └── main.py          # Landing + /health endpoints
+│   └── main.py          # Landing, login, questions CRUD, summary, health
 ├── static/
 │   ├── css/style.css    # Base styles
 │   ├── js/main.js       # Placeholder JS hooks
 │   └── images/
 └── templates/
-    ├── base.html        # Layout shell
-    └── index.html       # Hero + features copy
+  ├── base.html        # Layout shell
+  ├── index.html       # Hero + features copy
+  ├── questions.html   # user_questions CRUD UI
+  └── summary.html     # daily aggregation view
+app/services/
+├── user_questions.py    # Stored-proc CRUD helpers
+└── summary.py           # View reader for user_daily_summary
 config.py                # Environment-aware settings
 run.py                   # App entry point
 tasks.py                 # Invoke task helpers

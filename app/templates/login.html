@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Connect to Database{% endblock %}
+{% block content %}
+    <section class="card">
+        <h2>Connect to Database</h2>
+        <p>Enter database credentials to manage questions.</p>
+        <form method="post" class="form-grid">
+            <label>
+                Host
+                <input type="text" name="db_host" placeholder="localhost" required>
+            </label>
+            <label>
+                Port
+                <input type="number" name="db_port" placeholder="3306" min="1" max="65535">
+            </label>
+            <label>
+                User
+                <input type="text" name="db_user" placeholder="root" required>
+            </label>
+            <label>
+                Password
+                <input type="password" name="db_password" placeholder="••••">
+            </label>
+            <div class="form-actions">
+                <button type="submit" class="btn primary">Connect</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

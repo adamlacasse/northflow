@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Daily Summary{% endblock %}
+{% block content %}
+    <section class="card">
+        <h2>Daily Check-in Summary</h2>
+        <form method="get" action="{{ url_for("main.summary") }}" class="form-grid">
+            <label>
+                User (optional)
+                <select name="user_id">
+                    <option value="">All users</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}"
+                                {% if selected_user_id == user.id %}selected{% endif %}>
+                            {{ user.first_name }} {{ user.last_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Start date (optional)
+                <input type="date" name="start_date" value="{{ start_date or '' }}">
+            </label>
+            <label>
+                End date (optional)
+                <input type="date" name="end_date" value="{{ end_date or '' }}">
+            </label>
+            <div class="form-actions">
+                <button type="submit" class="btn">Apply Filters</button>
+                <a class="btn secondary" href="{{ url_for("main.summary") }}">Clear</a>
+            </div>
+        </form>
+    </section>
+    <section class="card">
+        <h2>Results</h2>
+        {% if summary_rows %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Date</th>
+                            <th>Check-ins</th>
+                            <th>Answers</th>
+                            <th>Avg Score</th>
+                            <th>Min</th>
+                            <th>Max</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in summary_rows %}
+                            <tr>
+                                <td>{{ row.user_name }}</td>
+                                <td>{{ row.checkin_date }}</td>
+                                <td>{{ row.total_checkins }}</td>
+                                <td>{{ row.total_answers }}</td>
+                                <td>{{ row.avg_score | default("—") }}</td>
+                                <td>{{ row.min_score | default("—") }}</td>
+                                <td>{{ row.max_score | default("—") }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No summary data found for the selected filters.</p>
+        {% endif %}
+    </section>
+{% endblock %}

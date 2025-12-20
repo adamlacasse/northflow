@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Manage Questions{% endblock %}
+{% block content %}
+    <section class="card">
+        <h2>Create Question</h2>
+        <form method="post"
+              action="{{ url_for("main.create_question") }}"
+              class="form-grid">
+            <label>
+                User
+                <select name="user_id" required>
+                    <option value="" disabled selected>Select a user</option>
+                    {% for user in users %}<option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>{% endfor %}
+                </select>
+            </label>
+            <label>
+                Question Text
+                <textarea name="question_text" rows="2" required></textarea>
+            </label>
+            <label>
+                Type
+                <select name="question_type" required>
+                    <option value="text">Text</option>
+                    <option value="scale_1_5">Scale 1-5</option>
+                    <option value="number">Number</option>
+                    <option value="boolean">Boolean</option>
+                </select>
+            </label>
+            <label class="checkbox-row">
+                <input type="checkbox" name="is_active" checked>
+                Active
+            </label>
+            <label>
+                Sort Order
+                <input type="number" name="sort_order" value="0" min="0">
+            </label>
+            <div class="form-actions">
+                <button type="submit" class="btn primary">Add Question</button>
+            </div>
+        </form>
+    </section>
+    <section class="card">
+        <h2>Existing Questions</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Text</th>
+                        <th>Type</th>
+                        <th>Active</th>
+                        <th>Sort</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in questions %}
+                        <form id="update-{{ q.id }}"
+                              method="post"
+                              action="{{ url_for('main.update_question', question_id=q.id) }}">
+                        </form>
+                        <form id="delete-{{ q.id }}"
+                              method="post"
+                              action="{{ url_for('main.delete_question_route', question_id=q.id) }}">
+                        </form>
+                        <tr>
+                            <td>{{ q.user_name }}</td>
+                            <td>
+                                <textarea form="update-{{ q.id }}" name="question_text" rows="2" required>{{ q.question_text }}</textarea>
+                            </td>
+                            <td>
+                                <select form="update-{{ q.id }}" name="question_type" required>
+                                    <option value="text" {% if q.question_type == 'text' %}selected{% endif %}>Text</option>
+                                    <option value="scale_1_5"
+                                            {% if q.question_type == 'scale_1_5' %}selected{% endif %}>
+                                        Scale 1-5
+                                    </option>
+                                    <option value="number"
+                                            {% if q.question_type == 'number' %}selected{% endif %}>Number</option>
+                                    <option value="boolean"
+                                            {% if q.question_type == 'boolean' %}selected{% endif %}>Boolean</option>
+                                </select>
+                            </td>
+                            <td class="center">
+                                <input form="update-{{ q.id }}"
+                                       type="checkbox"
+                                       name="is_active"
+                                       value="1"
+                                       {% if q.is_active %}checked{% endif %}>
+                            </td>
+                            <td class="center">
+                                <input form="update-{{ q.id }}"
+                                       type="number"
+                                       name="sort_order"
+                                       value="{{ q.sort_order }}"
+                                       min="0"
+                                       class="small-input">
+                            </td>
+                            <td class="actions">
+                                <button form="update-{{ q.id }}" type="submit" class="btn">Update</button>
+                                <button form="delete-{{ q.id }}" type="submit" class="btn danger">Delete</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

@@ -25,12 +25,34 @@
                         <li>
                             <a href="/">Home</a>
                         </li>
+                        {% if session.get('db_credentials') %}
+                            <li>
+                                <a href="{{ url_for("main.questions") }}">Questions</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for("main.summary") }}">Summary</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for("main.logout") }}">Logout</a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a href="{{ url_for("main.login") }}">Login</a>
+                            </li>
+                        {% endif %}
                         {% block nav_links %}{% endblock %}
                     </ul>
                 </div>
             </nav>
         </header>
         <main class="container">
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
             {% block content %}{% endblock %}
         </main>
         <footer>

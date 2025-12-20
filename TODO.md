@@ -1,10 +1,28 @@
 # NorthFlow TODOs (course alignment)
 
+## Immediate MVP checklist (due today)
+
+- [x] Run `invoke execute-schema` once to confirm seeds/routines/view `user_daily_summary` create cleanly; if time-crunched, at least verify `/health` after app start.
+- Ensure login gate collects DB host/port/user/password (db name fixed is fine) and blocks access until a connection succeeds; show errors inline.
+  - [x] Unsure about the "blocking access" bit. How do I manually test this?
+- Expose add/update/delete for `user_questions` via stored procs and refresh the list immediately after each mutation.
+  - [x] Please explain in more detail how to test this.
+- [x] Render the daily summary view (`user_daily_summary`) in a simple table; add a basic date/user filter only if time permits.
+- Double-check routes/services use the DAL only, and DAL uses stored routines/view (no raw SQL in routes).
+- Run `invoke lint` (or `lint-python` + `lint-sql`) and `pytest tests/` if DB reachable; otherwise note the gap.
+- Update README with current login flow, `.env` requirements, DB init steps, and the surfaced advanced feature.
+
 ## Short session plan (deadline: tomorrow afternoon)
 
-- Session 1 (≤60 min): Validate schema end-to-end with `invoke execute-schema`, ensure rubric items hold (≥30 answers, procs/views intact), note gaps.
-- Session 2 (≤60 min): Implement login gate collecting DB host/port/user/password, enforce layering, build CRUD UI for `user_questions` via stored procs with live refresh.
-- Session 3 (≤60 min): Surface advanced feature in UI (e.g., display/filter/export `user_daily_summary`), add targeted tests/docs, run full lint sweep.
+- Session 1 (≤60 min):
+  Validate schema end-to-end with `invoke execute-schema`,
+  ensure rubric items hold (≥30 answers, procs/views intact), note gaps.
+- Session 2 (≤60 min):
+  Implement login gate collecting DB host/port/user/password, enforce layering,
+  build CRUD UI for `user_questions` via stored procs with live refresh.
+- Session 3 (≤60 min):
+  Surface advanced feature in UI (e.g., display/filter/export
+  `user_daily_summary`), add targeted tests/docs, run full lint sweep.
 
 ## Course alignment checkpoints
 
