@@ -211,7 +211,17 @@ def delete_question_route(question_id: int):
 @bp.route("/health")
 def health():
     try:
-        db = DatabaseConnection()
+        creds = session.get("db_credentials")
+        if creds:
+            db = DatabaseConnection(
+                host=creds.get("host"),
+                user=creds.get("user"),
+                password=creds.get("password"),
+                database=creds.get("database"),
+                port=creds.get("port"),
+            )
+        else:
+            db = DatabaseConnection(port=Config.DB_PORT)
         db.call_procedure("health_check")
         db.close()
         return {"status": "healthy", "database": "connected"}, 200

@@ -65,10 +65,16 @@ def _read_schema_file():
 
 def _get_db_connection():
     """Create and return a database connection."""
+    port_raw = os.getenv("DB_PORT", "3306")
+    try:
+        port = int(port_raw)
+    except ValueError:
+        port = 3306
     return mysql.connector.connect(
         host=os.getenv("DB_HOST", "localhost"),
         user=os.getenv("DB_USER", "root"),
         password=os.getenv("DB_PASSWORD"),
+        port=port,
     )
 
 

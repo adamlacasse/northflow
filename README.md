@@ -83,6 +83,7 @@ by `config.py`):
 
 ```env
 DB_HOST=localhost
+DB_PORT=3306
 DB_USER=your_mysql_user
 DB_PASSWORD=your_mysql_password
 SECRET_KEY=change-me
@@ -134,6 +135,9 @@ Health endpoint (requires DB connectivity):
 curl http://localhost:5000/health
 # -> {"status": "healthy", "database": "connected"}
 ```
+
+`/health` uses the active session connection if you have already connected via
+`/login`. Otherwise, it falls back to the `.env` database settings.
 
 ## Tooling & Quality Gates
 
