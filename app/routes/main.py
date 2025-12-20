@@ -48,8 +48,15 @@ def _require_login():
 
 @bp.route("/")
 def index():
-    """Landing page."""
-    return render_template("index.html")
+    """Entry route.
+
+    The app requires a database connection for any meaningful data, so we
+    send unauthenticated users to the login gate.
+    """
+
+    if "db_credentials" not in session:
+        return redirect(url_for("main.login"))
+    return redirect(url_for("main.questions"))
 
 
 @bp.route("/login", methods=["GET", "POST"])

@@ -111,6 +111,8 @@ python run.py
 
 Visit `http://localhost:5000` for the landing page.
 
+If you are not connected yet, `/` will redirect you to `/login`.
+
 Login flow (DB connection required for data):
 
 - Go to `/login` and enter DB host, port, user, and password

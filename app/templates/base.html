@@ -19,12 +19,13 @@
             <nav>
                 <div class="container">
                     <h1>
-                        <a href="/">Northflow</a>
+                        {% if session.get('db_credentials') %}
+                            <a href="{{ url_for("main.questions") }}">Northflow</a>
+                        {% else %}
+                            <a href="{{ url_for("main.login") }}">Northflow</a>
+                        {% endif %}
                     </h1>
                     <ul>
-                        <li>
-                            <a href="/">Home</a>
-                        </li>
                         {% if session.get('db_credentials') %}
                             <li>
                                 <a href="{{ url_for("main.questions") }}">Questions</a>
