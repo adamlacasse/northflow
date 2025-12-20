@@ -13,14 +13,14 @@ The live UI is intentionally minimal; the focus is the MySQL schema + Python DAL
 
 Advanced feature concept is tracked in [ADVANCED_FEATURE.md](ADVANCED_FEATURE.md).
 
-See TODOs tracked in `TODO.md` (project root) for current action items aligned to these deliverables.
+Action items are tracked in project docs and issues (no `TODO.md` is required by this repo).
 
 ## Where important stuff lives
 
 - MySQL schema bootstrap: `app/database/schema.sql`
 - Schema runner: `app/database/setup_schema.py` (invoked by `invoke execute-schema`)
 - DAL wrapper: `app/models/dal.py` (uses mysql-connector-python, standardized DatabaseError)
-- Routes: `app/routes/main.py` (GET /, GET /health)
+- Routes: `app/routes/main.py` (/, /login, /logout, /questions + CRUD, /summary, /health)
 - Tests: `tests/test_connection.py` (expects DB credentials from `.env`)
 
 ## Assignment/rubric constraints (schema.sql must satisfy)

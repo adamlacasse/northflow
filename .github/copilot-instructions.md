@@ -23,14 +23,21 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 
 ### Database Schema (`app/database/schema.sql`)
 - Four main tables: `users`, `user_questions`, `checkins`, `answers`
-- Includes stored procedures for `user_questions` CRUD (e.g., `AddUserQuestion`, `UpdateUserQuestion`)
+- Includes stored procedures for `user_questions` CRUD (`add_user_question`, `update_user_question`, `delete_user_question`)
 - Schema includes seed data with user variables (`@avery_id`, `@jordan_id`, etc.)
 - Initialize with: `invoke execute-schema` (runs `app/database/setup_schema.py`)
 
 ### Routing (`app/routes/main.py`)
 - Single blueprint: `main` registered in app factory
-- Two routes:
-  - `GET /`: Landing page rendering `templates/index.html`
+- Routes:
+  - `GET /`: Landing page rendering `app/templates/index.html`
+  - `GET/POST /login`: DB connection gate (host/user/password/port) stored in session
+  - `GET /logout`: Clears DB session credentials
+  - `GET /questions`: Lists users + questions
+  - `POST /questions/create`: Creates a user question (stored procedure)
+  - `POST /questions/<question_id>/update`: Updates a user question (stored procedure with OUT success flag)
+  - `POST /questions/<question_id>/delete`: Deletes a user question (stored procedure)
+  - `GET /summary`: Reads aggregated rows from the `user_daily_summary` view with optional filters
   - `GET /health`: Returns JSON `{"status": "healthy", "database": "connected"}` (200) or `{"status": "unhealthy", "error": "..."}` (503)
 - Import pattern: `from app.models import DatabaseConnection, DatabaseError`
 
@@ -77,7 +84,8 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 
 ### SQL & Database
 - MySQL 8.0+ dialect required for SQLFluff
-- Use stored procedures for complex CRUD (not raw SQL strings in Python)
+- Use stored procedures for CRUD on `user_questions`
+- Read-only/lookup queries (e.g., listing users and reading the summary view) may use parameterized SELECTs via the DAL
 - Schema drops and recreates `northflow` database on initialization
 - Foreign keys use `ON DELETE CASCADE` consistently
 

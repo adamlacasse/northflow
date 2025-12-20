@@ -34,44 +34,49 @@ This aligns with the app’s purpose: *mindfulness, reflection, and habit tracki
 
 ---
 
-## Example Advanced Feature: Daily User Check-In Summary
+## Advanced Feature: Daily User Summary
 
 ### Type
 
-**SQL VIEW** (preferred for simplicity and readability)
+**SQL VIEW**
 
 ### Description
 
-Provides a per-user, per-day summary of mindfulness check-ins.
+Provides a per-user, per-day summary of mindfulness check-ins and scored answers.
 
 ### Tables Involved
 
 - `users`
 - `checkins`
-- `answers` (optional, depending on implementation)
-- `user_questions` (optional context)
+- `answers`
 
 ### Aggregates Used
 
-- `COUNT(*)` — number of check-ins per day
-- `AVG(score)` — average mood or rating
-- `MIN()` / `MAX()` — first and last check-in times (optional)
+- `COUNT(DISTINCT ...)` — number of check-ins per day
+- `COUNT(...)` — number of answers captured
+- `AVG()` / `MIN()` / `MAX()` — summary stats over `answers.score`
 
 ---
 
-## Example View Definition
+## Implemented View Definition (`user_daily_summary`)
 
 ```sql
-CREATE VIEW daily_user_checkin_summary AS
+CREATE VIEW user_daily_summary AS
 SELECT
     u.id AS user_id,
-    CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+    u.first_name,
+    u.last_name,
     DATE(c.checkin_time) AS checkin_date,
-    COUNT(c.id) AS total_checkins,
-    AVG(a.numeric_value) AS avg_mood_score
+    COUNT(DISTINCT c.id) AS total_checkins,
+    COUNT(a.question_id) AS total_answers,
+    AVG(a.score) AS avg_score,
+    MIN(a.score) AS min_score,
+    MAX(a.score) AS max_score
 FROM users u
-JOIN checkins c ON c.user_id = u.id
+LEFT JOIN checkins c ON c.user_id = u.id
 LEFT JOIN answers a ON a.checkin_id = c.id
 GROUP BY
     u.id,
+    u.first_name,
+    u.last_name,
     DATE(c.checkin_time);
