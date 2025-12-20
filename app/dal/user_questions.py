@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from app.dal.dal import DatabaseConnection, DatabaseError
+from app.dal.database_connection import DatabaseConnection, DatabaseError
 
 
 def _get_connection(creds: Dict[str, Any]) -> DatabaseConnection:

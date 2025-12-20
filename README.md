@@ -9,7 +9,7 @@ NorthFlow currently provides:
 
 - A Flask app factory (`app/__init__.py`) that wires configuration,
   routes, and assets.
-- A `DatabaseConnection` helper (`app/dal/dal.py`) that wraps
+- A `DatabaseConnection` helper (`app/dal/database_connection.py`) that wraps
   `mysql-connector-python` and standardizes error handling through
   `DatabaseError`.
 - UI flows for database login, `user_questions` CRUD via stored
@@ -24,6 +24,16 @@ NorthFlow currently provides:
 While the database schema anticipates full CRUD features, the live UI
 is intentionally minimal so the focus can remain on the DAL, routing,
 and deployment pipeline.
+
+## Advanced Feature: Aggregated Daily Summary
+
+**This project's advanced feature** is a multi-table aggregation view that provides analytical reporting over user check-in data.
+
+- **Database implementation**: The `user_daily_summary` VIEW aggregates data from `users`, `checkins`, and `answers` tables using `COUNT()`, `AVG()`, `MIN()`, and `MAX()` functions grouped by user and date.
+- **Stored procedure wrapper**: `list_daily_summary` stored procedure wraps the view and accepts optional filter parameters (user ID, start date, end date).
+- **UI implementation**: The `/summary` page provides a filterable interface to view aggregated statistics including total check-ins, answer counts, and score summaries per user per day.
+
+This feature demonstrates meaningful data summarization beyond basic CRUD operations, as required by the project rubric.
 
 ## Architecture at a Glance
 
@@ -145,15 +155,21 @@ curl http://localhost:5000/health
 ```text
 app/
 ├── __init__.py          # Flask app factory
-├── database/
-│   └── schema.sql       # MySQL schema bootstrap
-│   └── setup_schema.py  # Schema application helper
-├── models/
+├── dal/
 │   ├── __init__.py
-│   └── dal.py           # DatabaseConnection + DatabaseError
+│   ├── database_connection.py  # DatabaseConnection + DatabaseError
+│   ├── user_questions.py       # User questions domain DAL
+│   └── summary.py              # Daily summary domain DAL
+├── database/
+│   ├── schema.sql       # MySQL schema with stored procedures/views
+│   └── setup_schema.py  # Schema application helper
 ├── routes/
 │   ├── __init__.py
 │   └── main.py          # Landing, login, questions CRUD, summary, health
+├── services/
+│   ├── __init__.py
+│   ├── user_questions.py       # Business logic for user questions
+│   └── summary.py              # Business logic for daily summary
 ├── static/
 │   ├── css/style.css    # Base styles
 │   ├── js/main.js       # Placeholder JS hooks
@@ -161,22 +177,14 @@ app/
 └── templates/
   ├── base.html        # Layout shell
   ├── index.html       # Hero + features copy
+  ├── login.html       # DB connection form
   ├── questions.html   # user_questions CRUD UI
   └── summary.html     # daily aggregation view
-app/services/
-├── user_questions.py    # Stored-proc CRUD helpers
-└── summary.py           # View reader for user_daily_summary
 config.py                # Environment-aware settings
 run.py                   # App entry point
 tasks.py                 # Invoke task helpers
 tests/test_connection.py # DAL regression tests
 ```
-
-## Future Enhancements
-
-- Add authentication and session management on top of the current UI
-  shell.
-- Expand the frontend with dashboards fed by DAL metrics/APIs.
 
 ## License
 

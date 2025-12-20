@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from app.dal.summary_dal import list_daily_summary as dal_list_daily_summary
+from app.dal.summary import list_daily_summary as dal_list_daily_summary
 
 
 def list_daily_summary(

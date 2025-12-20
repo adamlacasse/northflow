@@ -19,7 +19,7 @@ Action items are tracked in project docs and issues (no `TODO.md` is required by
 
 - MySQL schema bootstrap: `app/database/schema.sql`
 - Schema runner: `app/database/setup_schema.py` (invoked by `invoke execute-schema`)
-- DAL wrapper: `app/dal/dal.py` (uses mysql-connector-python, standardized DatabaseError)
+- DAL wrapper: `app/dal/database_connection.py` (uses mysql-connector-python, standardized DatabaseError)
 - Routes: `app/routes/main.py` (/, /login, /logout, /questions + CRUD, /summary, /health)
 - Tests: `tests/test_connection.py` (expects DB credentials from `.env`)
 

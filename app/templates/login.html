@@ -7,19 +7,19 @@
         <form method="post" class="form-grid">
             <label>
                 Host
-                <input type="text" name="db_host" placeholder="localhost" required>
+                <input type="text" name="db_host" value="{{ config.DB_HOST }}" required>
             </label>
             <label>
                 Port
-                <input type="number" name="db_port" placeholder="3306" min="1" max="65535">
+                <input type="number" name="db_port" value="3306" min="1" max="65535">
             </label>
             <label>
                 User
-                <input type="text" name="db_user" placeholder="root" required>
+                <input type="text" name="db_user" value="{{ config.DB_USER }}" required>
             </label>
             <label>
                 Password
-                <input type="password" name="db_password" placeholder="••••">
+                <input type="password" name="db_password" placeholder="Enter password">
             </label>
             <div class="form-actions">
                 <button type="submit" class="btn primary">Connect</button>
