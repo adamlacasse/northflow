@@ -2,15 +2,22 @@
 
 ## Immediate MVP checklist (due today)
 
-- [x] Run `invoke execute-schema` once to confirm seeds/routines/view `user_daily_summary` create cleanly; if time-crunched, at least verify `/health` after app start.
-- Ensure login gate collects DB host/port/user/password (db name fixed is fine) and blocks access until a connection succeeds; show errors inline.
+- [x] Run `invoke execute-schema` once to confirm seeds/routines/view `user_daily_summary`
+  create cleanly; if time-crunched, at least verify `/health` after app start.
+- [x] Ensure login gate collects DB host/port/user/password (db name fixed is fine)
+  and blocks access until a connection succeeds; show errors inline.
   - [x] Unsure about the "blocking access" bit. How do I manually test this?
-- Expose add/update/delete for `user_questions` via stored procs and refresh the list immediately after each mutation.
+- [x] Expose add/update/delete for `user_questions` via stored procs and refresh the
+  list immediately after each mutation.
   - [x] Please explain in more detail how to test this.
-- [x] Render the daily summary view (`user_daily_summary`) in a simple table; add a basic date/user filter only if time permits.
-- Double-check routes/services use the DAL only, and DAL uses stored routines/view (no raw SQL in routes).
-- Run `invoke lint` (or `lint-python` + `lint-sql`) and `pytest tests/` if DB reachable; otherwise note the gap.
-- Update README with current login flow, `.env` requirements, DB init steps, and the surfaced advanced feature.
+- [x] Render the daily summary view (`user_daily_summary`) in a simple table;
+  add a basic date/user filter only if time permits.
+- [x] Double-check routes/services use the DAL only, and DAL uses stored routines/view
+  (no raw SQL in routes).
+- [x] Run `invoke lint` (or `lint-python` + `lint-sql`) and `pytest tests/` if DB
+  is reachable; otherwise note the gap.
+- [x] Update README with current login flow, `.env` requirements, DB init steps,
+  and the surfaced advanced feature.
 
 ## Short session plan (deadline: tomorrow afternoon)
 

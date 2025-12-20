@@ -169,7 +169,6 @@ def update_question(question_id: int):
 
     form = request.form
     try:
-        print("yassin")
         success = update_user_question(
             _db_creds(),
             question_id=question_id,
@@ -178,15 +177,11 @@ def update_question(question_id: int):
             is_active=bool(form.get("is_active")),
             sort_order=int(form.get("sort_order", 0)),
         )
-        print("yass queen!")
         if success:
-            print("148")
             flash("Question updated.", "success")
         else:
-            print("151")
             flash("No question updated (check ID).", "warning")
     except DatabaseError as exc:
-        print("fuuukkk")
         flash(f"Update failed: {exc}", "danger")
 
     return redirect(url_for("main.questions"))
