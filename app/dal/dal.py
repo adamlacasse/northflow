@@ -9,7 +9,6 @@ except ModuleNotFoundError:
     import sys
     from pathlib import Path
 
-    # Add project root to path if not already there
     project_root = Path(__file__).parent.parent.parent
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
@@ -47,13 +46,14 @@ class DatabaseConnection:
 
     def execute_query(self, query: str, params: tuple = ()) -> list[dict[str, Any]]:
         """Execute a SELECT query and return results as list of dictionaries."""
+
         if not self.allow_raw_sql:
             raise DatabaseError(
-                """
-                Raw SQL execution is disabled. Use stored
-                procedures/views via call_procedure().
+                """Raw SQL execution is disabled.
+                Use stored procedures/views via call_procedure().
                 """
             )
+
         try:
             self.cursor.execute(query, params)
             return self.cursor.fetchall()  # type: ignore[return-value]

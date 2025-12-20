@@ -1,19 +1,19 @@
 from typing import Any, Dict, List
 
-from app.models import DatabaseError
-from app.models.user_questions_dal import (
+from app.dal import DatabaseError
+from app.dal.user_questions_dal import (
     create_user_question as dal_create_user_question,
 )
-from app.models.user_questions_dal import (
+from app.dal.user_questions_dal import (
     delete_user_question as dal_delete_user_question,
 )
-from app.models.user_questions_dal import (
+from app.dal.user_questions_dal import (
     list_user_questions as dal_list_user_questions,
 )
-from app.models.user_questions_dal import (
+from app.dal.user_questions_dal import (
     list_users as dal_list_users,
 )
-from app.models.user_questions_dal import (
+from app.dal.user_questions_dal import (
     update_user_question as dal_update_user_question,
 )
 

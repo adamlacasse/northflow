@@ -13,7 +13,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - Configs defined in `config.py`: `DevelopmentConfig`, `TestingConfig`, `ProductionConfig`
 - All configs share the same `northflow` database; multi-environment support is future work
 
-### Database Layer (`app/models/dal.py`)
+### Database Layer (`app/dal/dal.py`)
 - **`DatabaseConnection`**: Primary DAL class wrapping `mysql-connector-python`
   - Always returns dictionary cursors for consistent JSON-like results
   - Methods: `execute_query()`, `call_procedure()`, `commit()`, `close()`
@@ -39,7 +39,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
   - `POST /questions/<question_id>/delete`: Deletes a user question (stored procedure)
   - `GET /summary`: Reads aggregated rows from the `user_daily_summary` view with optional filters
   - `GET /health`: Returns JSON `{"status": "healthy", "database": "connected"}` (200) or `{"status": "unhealthy", "error": "..."}` (503)
-- Import pattern: `from app.models import DatabaseConnection, DatabaseError`
+- Import pattern: `from app.dal import DatabaseConnection, DatabaseError`
 
 ## Developer Workflows
 
@@ -69,8 +69,8 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 
 ### Import Organization
 - Config imports: `from config import Config, config` (note: lowercase `config` dict)
-- DAL imports: `from app.models import DatabaseConnection, DatabaseError`
-- Package structure exports in `__init__.py` files (see `app/models/__init__.py`)
+- DAL imports: `from app.dal import DatabaseConnection, DatabaseError`
+- Package structure exports in `__init__.py` files (see `app/dal/__init__.py`)
 
 ### Error Handling
 - Always wrap DB operations in try/except and raise `DatabaseError` with context
@@ -90,7 +90,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - Foreign keys use `ON DELETE CASCADE` consistently
 
 ## Key Files Reference
-- **DAL patterns**: `app/models/dal.py` (DatabaseConnection class)
+- **DAL patterns**: `app/dal/dal.py` (DatabaseConnection class)
 - **Blueprint registration**: `app/__init__.py` (create_app factory)
 - **Health check example**: `app/routes/main.py` (/health endpoint)
 - **Test fixtures**: `tests/test_connection.py` (module-scoped DB fixture)

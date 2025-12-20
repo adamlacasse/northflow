@@ -9,7 +9,7 @@ NorthFlow currently provides:
 
 - A Flask app factory (`app/__init__.py`) that wires configuration,
   routes, and assets.
-- A `DatabaseConnection` helper (`app/models/dal.py`) that wraps
+- A `DatabaseConnection` helper (`app/dal/dal.py`) that wraps
   `mysql-connector-python` and standardizes error handling through
   `DatabaseError`.
 - UI flows for database login, `user_questions` CRUD via stored
@@ -42,8 +42,8 @@ and deployment pipeline.
 - **Templates & static assets**: `app/templates` plus `app/static/{css,
   js,images}` provide the UI shell; styles and scripts are deliberately
   minimal and easy to extend.
-- **Data layer**: `DatabaseConnection` supplies helpers for
-  `execute_query`, stored procedures, commits, and teardown with
+- **Data layer**: The DAL lives in `app/dal`. `DatabaseConnection`
+  supplies helpers for stored procedures, commits, and teardown with
   consistent logging. Business logic lives in `app/services`, including
   `user_questions` (CRUD + listing via stored procedures) and `summary`
   (daily reporting via a stored procedure wrapper over the

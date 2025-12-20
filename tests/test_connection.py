@@ -6,7 +6,7 @@ Run with: pytest tests/
 import pytest
 from dotenv import load_dotenv
 
-from app.models import DatabaseConnection, DatabaseError
+from app.dal import DatabaseConnection, DatabaseError
 
 # Load environment variables from .env file
 load_dotenv()

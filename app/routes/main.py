@@ -12,7 +12,7 @@ from flask import (
     url_for,
 )
 
-from app.models import DatabaseConnection, DatabaseError
+from app.dal import DatabaseConnection, DatabaseError
 from app.services.summary import list_daily_summary
 from app.services.user_questions import (
     create_user_question,
