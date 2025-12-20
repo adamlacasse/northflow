@@ -12,11 +12,6 @@ NorthFlow currently provides:
 - A `DatabaseConnection` helper (`app/dal/database_connection.py`) that wraps
   `mysql-connector-python` and standardizes error handling through
   `DatabaseError`.
-- UI flows for database login, `user_questions` CRUD via stored
-  procedures, and a daily summary view over the `user_daily_summary`
-  view.
-- A simple landing page plus a `/health` endpoint that validates the
-  database connection at runtime.
 - A MySQL schema (`app/database/schema.sql`) that captures users,
   custom questions, check-ins, answers, and the `user_daily_summary`
   aggregation view.
