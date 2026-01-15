@@ -15,18 +15,19 @@ NorthFlow currently provides:
 - A MySQL schema (`app/database/schema.sql`) that captures users,
   custom questions, check-ins, answers, and the `user_daily_summary`
   aggregation view.
-
-While the database schema anticipates full CRUD features, the live UI
-is intentionally minimal so the focus can remain on the DAL, routing,
-and deployment pipeline.
+- Full CRUD operations for managing check-ins and answers with a clean
+  web UI for creating check-ins, recording answers, and viewing historical data.
 
 ## Advanced Feature: Aggregated Daily Summary
 
 **This project's advanced feature** is a multi-table aggregation view that provides analytical reporting over user check-in data.
 
-- **Database implementation**: The `user_daily_summary` VIEW aggregates data from `users`, `checkins`, and `answers` tables using `COUNT()`, `AVG()`, `MIN()`, and `MAX()` functions grouped by user and date.
-- **Stored procedure wrapper**: `list_daily_summary` stored procedure wraps the view and accepts optional filter parameters (user ID, start date, end date).
-- **UI implementation**: The `/summary` page provides a filterable interface to view aggregated statistics including total check-ins, answer counts, and score summaries per user per day.
+- **Database implementation**: The `user_daily_summary` VIEW aggregates data
+from `users`, `checkins`, and `answers` tables using `COUNT()`, `AVG()`, `MIN()`, and `MAX()` functions grouped by user and date.
+- **Stored procedure wrapper**: `list_daily_summary` stored procedure wraps the
+view and accepts optional filter parameters (user ID, start date, end date).
+- **UI implementation**: The `/summary` page provides a filterable interface to
+view aggregated statistics including total check-ins, answer counts, and score summaries per user per day.
 
 This feature demonstrates meaningful data summarization beyond basic CRUD operations, as required by the project rubric.
 
@@ -39,20 +40,30 @@ This feature demonstrates meaningful data summarization beyond basic CRUD operat
   `python-dotenv` and defines `DevelopmentConfig`, `TestingConfig`, and
   `ProductionConfig` classes. All rely on the `northflow` database by
   default.
-- **Blueprints**: `app/routes/main.py` exposes `GET /` (landing page),
-  `GET/POST /login` (DB connection gate), `GET /questions` with
-  supporting CRUD endpoints for `user_questions`, `GET /summary` for
-  the daily aggregation view, and `GET /health` (DB connectivity check
-  returning JSON 200/503).
+- **Blueprints**: `app/routes/main.py` exposes:
+  - `GET /` – Landing page (redirects to `/questions` if logged in, `/login` otherwise)
+  - `GET/POST /login` – DB connection gate (host/user/password/port configurable)
+  - `GET /questions` – Manage custom user questions (CRUD via stored procedures)
+  - `GET /checkins` – View and filter user check-ins
+  - `POST /checkins/create` – Create a new check-in
+  - `GET /checkins/<id>` – View/edit check-in and answer questions
+  - `POST /checkins/<id>/update` – Update check-in notes
+  - `POST /checkins/<id>/delete` – Delete check-in and all answers
+  - `POST /checkins/<id>/answers/<question_id>/save` – Save/update answer
+  - `POST /checkins/<id>/answers/<question_id>/delete` – Remove answer
+  - `GET /summary` – View aggregated daily check-in statistics with filters
+  - `GET /health` – DB connectivity check (returns JSON 200/503)
 - **Templates & static assets**: `app/templates` plus `app/static/{css,
   js,images}` provide the UI shell; styles and scripts are deliberately
   minimal and easy to extend.
 - **Data layer**: The DAL lives in `app/dal`. `DatabaseConnection`
   supplies helpers for stored procedures, commits, and teardown with
-  consistent logging. Business logic lives in `app/services`, including
-  `user_questions` (CRUD + listing via stored procedures) and `summary`
-  (daily reporting via a stored procedure wrapper over the
-  `user_daily_summary` view).
+  consistent logging. Business logic lives in `app/services`, including:
+  - `user_questions` – CRUD + listing via stored procedures
+  - `checkins` – Check-in CRUD operations
+  - `answers` – Answer CRUD operations
+  - `summary` – Daily reporting via a stored procedure wrapper over the
+    `user_daily_summary` view
 - **Testing**: `tests/test_connection.py` exercises the DAL, verifying
   that connections, queries, and error handling behave as expected.
 
@@ -124,9 +135,12 @@ Login flow (DB connection required for data):
 - Go to `/login` and enter DB host, port, user, and password
   (database name is fixed to `northflow`).
 - On success, you will be redirected to `/questions`.
-- Manage custom prompts at `/questions` (add/update/delete via stored
+- **Manage custom prompts** at `/questions` (add/update/delete via stored
   procedures with live refresh).
-- View aggregated daily stats at `/summary`, with optional user and
+- **Create and manage check-ins** at `/checkins` – select a user to view
+  their check-ins, create new ones, and record answers to their custom questions.
+  Question-type aware forms handle text, numeric, 1-5 scales, and boolean responses.
+- **View aggregated daily stats** at `/summary`, with optional user and
   date filters sourced from the `user_daily_summary` view.
 
 Health endpoint (requires DB connectivity):
@@ -158,27 +172,33 @@ app/
 │   ├── __init__.py
 │   ├── database_connection.py  # DatabaseConnection + DatabaseError
 │   ├── user_questions.py       # User questions domain DAL
+│   ├── checkins.py             # Check-in domain DAL (CRUD via stored procedures)
+│   ├── answers.py              # Answer domain DAL (CRUD via stored procedures)
 │   └── summary.py              # Daily summary domain DAL
 ├── database/
-│   ├── schema.sql       # MySQL schema with stored procedures/views
+│   ├── schema.sql       # MySQL schema with 10+ stored procedures/views
 │   └── setup_schema.py  # Schema application helper
 ├── routes/
 │   ├── __init__.py
-│   └── main.py          # Landing, login, questions CRUD, summary, health
+│   └── main.py
 ├── services/
 │   ├── __init__.py
 │   ├── user_questions.py       # Business logic for user questions
+│   ├── checkins.py             # Business logic for check-in CRUD
+│   ├── answers.py              # Business logic for answer CRUD
 │   └── summary.py              # Business logic for daily summary
 ├── static/
-│   ├── css/style.css    # Base styles
+│   ├── css/style.css    # Base styles (285 lines, no inline styles)
 │   ├── js/main.js       # Placeholder JS hooks
 │   └── images/
 └── templates/
-  ├── base.html        # Layout shell
+  ├── base.html        # Layout shell with navigation
   ├── index.html       # Hero + features copy
   ├── login.html       # DB connection form
   ├── questions.html   # user_questions CRUD UI
-  └── summary.html     # daily aggregation view
+  ├── checkins.html    # Check-in list, filter, and create form
+  ├── checkin_detail.html # Check-in detail with dynamic answer forms
+  └── summary.html     # Daily aggregation view with filters
 config.py                # Environment-aware settings
 run.py                   # App entry point
 tasks.py                 # Invoke task helpers

@@ -958,5 +958,141 @@ BEGIN
     WHERE id = p_question_id;
 END$$
 
+CREATE PROCEDURE add_checkin (
+    IN p_user_id INT,
+    IN p_notes TEXT
+)
+BEGIN
+    INSERT INTO checkins (user_id, notes)
+    VALUES (p_user_id, p_notes);
+    SELECT LAST_INSERT_ID() AS checkin_id;
+END$$
+
+CREATE PROCEDURE update_checkin (
+    IN p_checkin_id INT,
+    IN p_notes TEXT,
+    OUT p_success TINYINT(1)
+)
+BEGIN
+    UPDATE checkins
+    SET notes = p_notes
+    WHERE id = p_checkin_id;
+
+    SET p_success = (ROW_COUNT() > 0);
+END$$
+
+CREATE PROCEDURE delete_checkin (
+    IN p_checkin_id INT
+)
+BEGIN
+    DELETE FROM checkins
+    WHERE id = p_checkin_id;
+END$$
+
+CREATE PROCEDURE get_checkin (
+    IN p_checkin_id INT
+)
+BEGIN
+    SELECT
+        c.id,
+        c.user_id,
+        CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+        c.checkin_time,
+        c.notes
+    FROM checkins AS c
+    JOIN users AS u ON u.id = c.user_id
+    WHERE c.id = p_checkin_id;
+END$$
+
+CREATE PROCEDURE list_checkins (
+    IN p_user_id INT
+)
+BEGIN
+    SELECT
+        c.id,
+        c.user_id,
+        CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+        c.checkin_time,
+        c.notes,
+        COUNT(a.question_id) AS answer_count
+    FROM checkins AS c
+    JOIN users AS u ON u.id = c.user_id
+    LEFT JOIN answers AS a ON a.checkin_id = c.id
+    WHERE c.user_id = p_user_id
+    GROUP BY c.id
+    ORDER BY c.checkin_time DESC;
+END$$
+
+CREATE PROCEDURE add_answer (
+    IN p_checkin_id INT,
+    IN p_question_id INT,
+    IN p_answer_text TEXT,
+    IN p_score DECIMAL(5, 2)
+)
+BEGIN
+    INSERT INTO answers (
+        checkin_id,
+        question_id,
+        answer_text,
+        score
+    )
+    VALUES (
+        p_checkin_id,
+        p_question_id,
+        p_answer_text,
+        p_score
+    )
+    ON DUPLICATE KEY UPDATE
+        answer_text = p_answer_text,
+        score = p_score;
+END$$
+
+CREATE PROCEDURE update_answer (
+    IN p_checkin_id INT,
+    IN p_question_id INT,
+    IN p_answer_text TEXT,
+    IN p_score DECIMAL(5, 2),
+    OUT p_success TINYINT(1)
+)
+BEGIN
+    UPDATE answers
+    SET
+        answer_text = p_answer_text,
+        score = p_score
+    WHERE
+        checkin_id = p_checkin_id
+        AND question_id = p_question_id;
+
+    SET p_success = (ROW_COUNT() > 0);
+END$$
+
+CREATE PROCEDURE delete_answer (
+    IN p_checkin_id INT,
+    IN p_question_id INT
+)
+BEGIN
+    DELETE FROM answers
+    WHERE
+        checkin_id = p_checkin_id
+        AND question_id = p_question_id;
+END$$
+
+CREATE PROCEDURE get_checkin_answers (
+    IN p_checkin_id INT
+)
+BEGIN
+    SELECT
+        a.checkin_id,
+        a.question_id,
+        uq.question_text,
+        uq.question_type,
+        a.answer_text,
+        a.score
+    FROM answers AS a
+    JOIN user_questions AS uq ON uq.id = a.question_id
+    WHERE a.checkin_id = p_checkin_id
+    ORDER BY uq.sort_order, uq.id;
+END$$
+
 DELIMITER ; -- noqa: disable=PRS
 -- noqa: enable=PRS

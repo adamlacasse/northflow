@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Check-in Detail{% endblock %}
+{% block content %}
+    <section class="card">
+        <h2>Check-in Details</h2>
+        <div class="details-section">
+            <p>
+                <strong>User:</strong>
+                {{ checkin.user_name }}
+            </p>
+            <p>
+                <strong>Date/Time:</strong>
+                {{ checkin.checkin_time }}
+            </p>
+        </div>
+        <form method="post"
+              action="{{ url_for('main.update_checkin_route', checkin_id=checkin.id) }}"
+              class="form-grid">
+            <label>
+                Notes
+                <textarea name="notes" rows="3">{{ checkin.notes or "" }}</textarea>
+            </label>
+            <div class="form-actions">
+                <button type="submit" class="btn primary">Update Notes</button>
+                <form method="post"
+                      action="{{ url_for('main.delete_checkin_route', checkin_id=checkin.id) }}"
+                      class="form-inline">
+                    <button type="submit"
+                            class="btn danger"
+                            onclick="return confirm('Delete this check-in and all answers?');">Delete Check-in</button>
+                </form>
+            </div>
+        </form>
+    </section>
+    <section class="card">
+        <h2>Answers</h2>
+        {% if questions %}
+            {% for q in questions %}
+                <div class="question-section">
+                    <h3>{{ q.question_text }}</h3>
+                    <form method="post"
+                          action="{{ url_for('main.save_answer_route', checkin_id=checkin.id, question_id=q.id) }}"
+                          class="form-grid">
+                        {% set answer = answers.get(q.id, {}) %}
+                        {% if q.question_type == 'text' %}
+                            <label>
+                                Your answer
+                                <textarea name="answer_text" rows="2">{{ answer.get('answer_text', '') or "" }}</textarea>
+                            </label>
+                        {% elif q.question_type == 'scale_1_5' %}
+                            <label>
+                                Rate (1-5)
+                                <select name="score">
+                                    <option value="">Select a rating</option>
+                                    <option value="1" {% if answer.get('score') == 1 %}selected{% endif %}>1 - Very Low</option>
+                                    <option value="2" {% if answer.get('score') == 2 %}selected{% endif %}>2 - Low</option>
+                                    <option value="3" {% if answer.get('score') == 3 %}selected{% endif %}>3 - Medium</option>
+                                    <option value="4" {% if answer.get('score') == 4 %}selected{% endif %}>4 - High</option>
+                                    <option value="5" {% if answer.get('score') == 5 %}selected{% endif %}>5 - Very High</option>
+                                </select>
+                            </label>
+                        {% elif q.question_type == 'number' %}
+                            <label>
+                                Number
+                                <input type="number"
+                                       name="answer_text"
+                                       step="1"
+                                       value="{{ answer.get('answer_text', '') or "" }}">
+                            </label>
+                        {% elif q.question_type == 'boolean' %}
+                            <label class="checkbox-label">
+                                <input type="checkbox"
+                                       name="answer_text"
+                                       value="1"
+                                       {% if answer.get('answer_text') == "1" %}checked{% endif %}>
+                                <span>Yes</span>
+                            </label>
+                        {% endif %}
+                        <div class="form-actions">
+                            <button type="submit" class="btn small primary">Save Answer</button>
+                            {% if answer %}
+                                <form method="post"
+                                      action="{{ url_for('main.delete_answer_route', checkin_id=checkin.id, question_id=q.id) }}"
+                                      class="form-inline">
+                                    <button type="submit" class="btn small danger">Clear</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-state">No questions found for this user.</p>
+        {% endif %}
+    </section>
+    <section class="card">
+        <div class="form-actions">
+            <a href="{{ url_for("main.checkins") }}" class="btn secondary">Back to Check-ins</a>
+        </div>
+    </section>
+{% endblock %}

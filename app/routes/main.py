@@ -13,6 +13,18 @@ from flask import (
 )
 
 from app.dal import DatabaseConnection, DatabaseError
+from app.services.answers import (
+    add_answer,
+    delete_answer,
+    get_checkin_answers,
+)
+from app.services.checkins import (
+    create_checkin,
+    delete_checkin,
+    get_checkin,
+    list_checkins,
+    update_checkin,
+)
 from app.services.summary import list_daily_summary
 from app.services.user_questions import (
     create_user_question,
@@ -206,6 +218,176 @@ def delete_question_route(question_id: int):
         flash(f"Delete failed: {exc}", "danger")
 
     return redirect(url_for("main.questions"))
+
+
+@bp.route("/checkins")
+def checkins():
+    if not _require_login():
+        return redirect(url_for("main.login"))
+
+    user_id_raw = request.args.get("user_id", "").strip()
+    user_id = int(user_id_raw) if user_id_raw else None
+
+    try:
+        creds = _db_creds()
+        users = list_users(creds)
+
+        if user_id:
+            checkins_list = list_checkins(creds, user_id=user_id)
+        else:
+            checkins_list = []
+
+        return render_template(
+            "checkins.html",
+            users=users,
+            checkins=checkins_list,
+            selected_user_id=user_id,
+        )
+    except DatabaseError as exc:
+        flash(f"Unable to load check-ins: {exc}", "danger")
+        return redirect(url_for("main.login"))
+
+
+@bp.route("/checkins/create", methods=["POST"])
+def create_checkin_route():
+    if not _require_login():
+        return redirect(url_for("main.login"))
+
+    form = request.form
+    user_id = int(form.get("user_id", 0))
+    notes = form.get("notes", "").strip()
+
+    try:
+        checkin_id = create_checkin(
+            _db_creds(),
+            user_id=user_id,
+            notes=notes,
+        )
+        flash("Check-in created. Add your answers below.", "success")
+        return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+    except DatabaseError as exc:
+        flash(f"Create check-in failed: {exc}", "danger")
+        return redirect(url_for("main.checkins", user_id=user_id))
+
+
+@bp.route("/checkins/<int:checkin_id>")
+def checkin_detail(checkin_id: int):
+    if not _require_login():
+        return redirect(url_for("main.login"))
+
+    try:
+        creds = _db_creds()
+        checkin = get_checkin(creds, checkin_id=checkin_id)
+        if not checkin:
+            flash("Check-in not found.", "warning")
+            return redirect(url_for("main.checkins"))
+
+        user_id = checkin.get("user_id")
+        user_questions = list_user_questions(creds)
+        # Filter to active questions for this user
+        user_qs = [
+            q for q in user_questions if q["user_id"] == user_id and q["is_active"]
+        ]
+
+        answers = get_checkin_answers(creds, checkin_id=checkin_id)
+        answers_dict = {a["question_id"]: a for a in answers}
+
+        return render_template(
+            "checkin_detail.html",
+            checkin=checkin,
+            questions=user_qs,
+            answers=answers_dict,
+        )
+    except DatabaseError as exc:
+        flash(f"Unable to load check-in: {exc}", "danger")
+        return redirect(url_for("main.checkins"))
+
+
+@bp.route("/checkins/<int:checkin_id>/update", methods=["POST"])
+def update_checkin_route(checkin_id: int):
+    if not _require_login():
+        return redirect(url_for("main.login"))
+
+    form = request.form
+    notes = form.get("notes", "").strip()
+
+    try:
+        success = update_checkin(
+            _db_creds(),
+            checkin_id=checkin_id,
+            notes=notes,
+        )
+        if success:
+            flash("Check-in notes updated.", "success")
+        else:
+            flash("Check-in not found.", "warning")
+    except DatabaseError as exc:
+        flash(f"Update failed: {exc}", "danger")
+
+    return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+
+
+@bp.route("/checkins/<int:checkin_id>/delete", methods=["POST"])
+def delete_checkin_route(checkin_id: int):
+    if not _require_login():
+        return redirect(url_for("main.login"))
+
+    try:
+        checkin = get_checkin(_db_creds(), checkin_id=checkin_id)
+        user_id = checkin.get("user_id") if checkin else None
+        delete_checkin(_db_creds(), checkin_id=checkin_id)
+        flash("Check-in deleted.", "info")
+        if user_id:
+            return redirect(url_for("main.checkins", user_id=user_id))
+        return redirect(url_for("main.checkins"))
+    except DatabaseError as exc:
+        flash(f"Delete failed: {exc}", "danger")
+        return redirect(url_for("main.checkins"))
+
+
+@bp.route("/checkins/<int:checkin_id>/answers/<int:question_id>/save", methods=["POST"])
+def save_answer_route(checkin_id: int, question_id: int):
+    if not _require_login():
+        return redirect(url_for("main.login"))
+
+    form = request.form
+    answer_text = form.get("answer_text", "").strip() or None
+    score_raw = form.get("score", "").strip()
+    score = float(score_raw) if score_raw else None
+
+    try:
+        add_answer(
+            _db_creds(),
+            checkin_id=checkin_id,
+            question_id=question_id,
+            answer_text=answer_text,
+            score=score,
+        )
+        flash("Answer saved.", "success")
+    except DatabaseError as exc:
+        flash(f"Save answer failed: {exc}", "danger")
+
+    return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+
+
+@bp.route(
+    "/checkins/<int:checkin_id>/answers/<int:question_id>/delete", methods=["POST"]
+)
+def delete_answer_route(checkin_id: int, question_id: int):
+    if not _require_login():
+        return redirect(url_for("main.login"))
+
+    try:
+        delete_answer(
+            _db_creds(),
+            checkin_id=checkin_id,
+            question_id=question_id,
+        )
+        flash("Answer deleted.", "info")
+    except DatabaseError as exc:
+        flash(f"Delete answer failed: {exc}", "danger")
+
+    return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
 
 
 @bp.route("/health")
