@@ -1,5 +1,7 @@
 You are working inside the NorthFlow repo (Flask + MySQL).
 
+**Before starting work**: Check [TODO.md](../../TODO.md) for the current production roadmap and prioritized items.
+
 Primary goal:
 Fix/upgrade `app/database/schema.sql` so it is correct, portable, and rubric-compliant.
 

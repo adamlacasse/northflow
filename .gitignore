@@ -206,7 +206,3 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-
-# Project planning docs (not for submission)
-TODO.md
-todo.md
