@@ -29,7 +29,6 @@ from app.services.user_questions import (
     create_user_question,
     delete_user_question,
     list_user_questions,
-    list_users,
     update_user_question,
 )
 from config import Config
@@ -48,6 +47,18 @@ def _db_creds() -> Dict[str, Any]:
     }
 
 
+def _get_current_user() -> int:
+    """Get current user ID.
+
+    For now, returns hardcoded user ID (Avery Hart - ID 1).
+    When authentication is implemented, this will return session['user_id'].
+
+    TODO: Replace with authenticated user from session after auth is implemented.
+    """
+    # Hardcoded for development - will be replaced with session['user_id']
+    return 1  # Avery Hart
+
+
 @bp.route("/")
 def index():
     """Entry route. Redirect to questions page."""
@@ -58,42 +69,39 @@ def index():
 def questions():
     try:
         creds = _db_creds()
-        users = list_users(creds)
+        current_user_id = _get_current_user()
         questions = list_user_questions(creds)
-        return render_template("questions.html", users=users, questions=questions)
+        # Filter to only show current user's questions
+        my_questions = [q for q in questions if q["user_id"] == current_user_id]
+        return render_template("questions.html", questions=my_questions)
     except DatabaseError as exc:
         flash(f"Unable to load questions: {exc}", "danger")
-        return render_template("questions.html", users=[], questions=[])
+        return render_template("questions.html", questions=[])
 
 
 @bp.route("/summary")
 def summary():
-    user_id_raw = request.args.get("user_id", "").strip()
     start_date = request.args.get("start_date", "").strip() or None
     end_date = request.args.get("end_date", "").strip() or None
 
-    user_id = int(user_id_raw) if user_id_raw else None
-
     try:
         creds = _db_creds()
-        users = list_users(creds)
+        current_user_id = _get_current_user()
         summary_rows = list_daily_summary(
             creds,
-            user_id=user_id,
+            user_id=current_user_id,
             start_date=start_date,
             end_date=end_date,
         )
         return render_template(
             "summary.html",
-            users=users,
             summary_rows=summary_rows,
-            selected_user_id=user_id,
             start_date=start_date,
             end_date=end_date,
         )
     except DatabaseError as exc:
         flash(f"Unable to load summary: {exc}", "danger")
-        return render_template("summary.html", users=[], summary_rows=[])
+        return render_template("summary.html", summary_rows=[])
 
 
 @bp.route("/questions/create", methods=["POST"])
@@ -102,7 +110,7 @@ def create_question():
     try:
         create_user_question(
             _db_creds(),
-            user_id=int(form.get("user_id", 0)),
+            user_id=_get_current_user(),
             question_text=form.get("question_text", "").strip(),
             question_type=form.get("question_type", "text"),
             is_active=bool(form.get("is_active")),
@@ -150,46 +158,36 @@ def delete_question_route(question_id: int):
 
 @bp.route("/checkins")
 def checkins():
-    user_id_raw = request.args.get("user_id", "").strip()
-    user_id = int(user_id_raw) if user_id_raw else None
-
     try:
         creds = _db_creds()
-        users = list_users(creds)
-
-        if user_id:
-            checkins_list = list_checkins(creds, user_id=user_id)
-        else:
-            checkins_list = []
+        current_user_id = _get_current_user()
+        checkins_list = list_checkins(creds, user_id=current_user_id)
 
         return render_template(
             "checkins.html",
-            users=users,
             checkins=checkins_list,
-            selected_user_id=user_id,
         )
     except DatabaseError as exc:
         flash(f"Unable to load check-ins: {exc}", "danger")
-        return render_template("checkins.html", users=[], checkins=[])
+        return render_template("checkins.html", checkins=[])
 
 
 @bp.route("/checkins/create", methods=["POST"])
 def create_checkin_route():
     form = request.form
-    user_id = int(form.get("user_id", 0))
     notes = form.get("notes", "").strip()
 
     try:
         checkin_id = create_checkin(
             _db_creds(),
-            user_id=user_id,
+            user_id=_get_current_user(),
             notes=notes,
         )
         flash("Check-in created. Add your answers below.", "success")
         return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
     except DatabaseError as exc:
         flash(f"Create check-in failed: {exc}", "danger")
-        return redirect(url_for("main.checkins", user_id=user_id))
+        return redirect(url_for("main.checkins"))
 
 
 @bp.route("/checkins/<int:checkin_id>")
@@ -248,12 +246,8 @@ def update_checkin_route(checkin_id: int):
 @bp.route("/checkins/<int:checkin_id>/delete", methods=["POST"])
 def delete_checkin_route(checkin_id: int):
     try:
-        checkin = get_checkin(_db_creds(), checkin_id=checkin_id)
-        user_id = checkin.get("user_id") if checkin else None
         delete_checkin(_db_creds(), checkin_id=checkin_id)
         flash("Check-in deleted.", "info")
-        if user_id:
-            return redirect(url_for("main.checkins", user_id=user_id))
         return redirect(url_for("main.checkins"))
     except DatabaseError as exc:
         flash(f"Delete failed: {exc}", "danger")

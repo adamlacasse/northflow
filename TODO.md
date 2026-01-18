@@ -78,7 +78,7 @@ for current infrastructure details, environment setup, and rollback procedures.
 
 ---
 
-## Database & Data (Items 6, 11, 16, 17, 21)
+## Database & Data (Items 6, 11, 16, 17, 21, 27)
 
 - [ ] **6. Implement database connection pooling**
   - Replace single connection pattern with connection pooling
@@ -109,6 +109,15 @@ for current infrastructure details, environment setup, and rollback procedures.
   - Test recovery procedures
   - Document backup/restore steps
   - Plan RTO/RPO requirements for data loss scenarios
+
+- [ ] **27. Remove seed data from schema file**
+  - Remove all hardcoded seed data from `app/database/schema.sql`
+  - Remove test users (Avery, Jordan, Quinn, Morgan, Casey, Taylor, Riley, Alex)
+  - Remove sample questions, check-ins, and answers
+  - Keep only schema structure (tables, indexes, stored procedures, views)
+  - Production data should come from real user registrations
+  - Consider creating separate seed file for local development/testing
+  - Update schema initialization to handle empty database gracefully
 
 ---
 
