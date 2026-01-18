@@ -1,6 +1,8 @@
 """Authentication routes for OAuth login/logout."""
 
 import logging
+from functools import wraps
+from typing import Any, Dict
 
 from authlib.integrations.base_client import OAuthError
 from flask import Blueprint, flash, redirect, render_template, session, url_for
@@ -12,9 +14,34 @@ from app.dal.oauth_users import (
     get_user_by_oauth,
     update_last_login,
 )
+from config import Config
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 logger = logging.getLogger(__name__)
+
+
+def _db_creds() -> Dict[str, Any]:
+    """Get database credentials from environment config."""
+    return {
+        "host": Config.DB_HOST,
+        "user": Config.DB_USER,
+        "password": Config.DB_PASSWORD,
+        "database": Config.DATABASE,
+        "port": Config.DB_PORT,
+    }
+
+
+def login_required(f):
+    """Decorator to require user authentication for routes."""
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in to access this page.", "warning")
+            return redirect(url_for("auth.login"))
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 @bp.route("/login")
@@ -60,14 +87,8 @@ def callback_google():
             flash("Authentication failed: Missing user information", "danger")
             return redirect(url_for("auth.login"))
 
-        # Get database credentials from session
-        db_creds = {
-            "host": session.get("db_host"),
-            "user": session.get("db_user"),
-            "password": session.get("db_password"),
-            "port": session.get("db_port"),
-            "database": "northflow",
-        }
+        # Get database credentials from environment config
+        db_creds = _db_creds()
 
         # Check if user already exists
         user = get_user_by_oauth(db_creds, "google", oauth_id)
@@ -166,14 +187,8 @@ def callback_github():
         first_name = name_parts[0]
         last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-        # Get database credentials from session
-        db_creds = {
-            "host": session.get("db_host"),
-            "user": session.get("db_user"),
-            "password": session.get("db_password"),
-            "port": session.get("db_port"),
-            "database": "northflow",
-        }
+        # Get database credentials from environment config
+        db_creds = _db_creds()
 
         # Check if user already exists
         user = get_user_by_oauth(db_creds, "github", oauth_id)

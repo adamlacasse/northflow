@@ -32,6 +32,18 @@
                             <a href="{{ url_for("main.summary") }}">My Summary</a>
                         </li>
                         {% block nav_links %}{% endblock %}
+                        {% if session.user_id %}
+                            <li class="user-info">
+                                <span>{{ session.user_name or session.email }}</span>
+                            </li>
+                            <li>
+                                <a href="{{ url_for("auth.logout") }}" class="logout-link">Logout</a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a href="{{ url_for("auth.login") }}">Login</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
             </nav>

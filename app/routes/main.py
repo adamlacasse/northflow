@@ -9,11 +9,13 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     url_for,
 )
 
 from app import limiter
 from app.dal import DatabaseConnection, DatabaseError
+from app.routes.auth import login_required
 from app.services.answers import (
     add_answer,
     delete_answer,
@@ -58,24 +60,26 @@ def _db_creds() -> Dict[str, Any]:
 
 
 def _get_current_user() -> int:
-    """Get current user ID.
+    """Get current user ID from session.
 
-    For now, returns hardcoded user ID (Demo User - ID 1).
-    When authentication is implemented, this will return session['user_id'].
+    Returns the authenticated user's ID from the session.
+    This is set during OAuth login in app/routes/auth.py.
 
-    TODO: Replace with authenticated user from session after auth is implemented.
+    Returns:
+        int: The current user's ID from session['user_id']
     """
-    # Hardcoded for development - will be replaced with session['user_id']
-    return 1  # Demo User
+    return session.get("user_id")
 
 
 @bp.route("/")
+@login_required
 def index():
     """Entry route. Redirect to questions page."""
     return redirect(url_for("main.questions"))
 
 
 @bp.route("/questions")
+@login_required
 def questions():
     try:
         creds = _db_creds()
@@ -94,6 +98,7 @@ def questions():
 
 
 @bp.route("/summary")
+@login_required
 def summary():
     start_date = request.args.get("start_date", "").strip() or None
     end_date = request.args.get("end_date", "").strip() or None
@@ -129,6 +134,7 @@ def summary():
 
 @bp.route("/questions/create", methods=["POST"])
 @limiter.limit("10/minute")
+@login_required
 def create_question():
     form_data = {
         "question_text": request.form.get("question_text", "").strip(),
@@ -162,6 +168,7 @@ def create_question():
 
 @bp.route("/questions/<int:question_id>/update", methods=["POST"])
 @limiter.limit("10/minute")
+@login_required
 def update_question(question_id: int):
     form_data = {
         "question_text": request.form.get("question_text", "").strip(),
@@ -198,6 +205,7 @@ def update_question(question_id: int):
 
 @bp.route("/questions/<int:question_id>/delete", methods=["POST"])
 @limiter.limit("10/minute")
+@login_required
 def delete_question_route(question_id: int):
     try:
         delete_user_question(_db_creds(), question_id=question_id)
@@ -210,6 +218,7 @@ def delete_question_route(question_id: int):
 
 
 @bp.route("/checkins")
+@login_required
 def checkins():
     try:
         creds = _db_creds()
@@ -228,6 +237,7 @@ def checkins():
 
 @bp.route("/checkins/create", methods=["POST"])
 @limiter.limit("10/minute")
+@login_required
 def create_checkin_route():
     form_data = {"notes": request.form.get("notes", "").strip()}
 
@@ -252,6 +262,7 @@ def create_checkin_route():
 
 
 @bp.route("/checkins/<int:checkin_id>")
+@login_required
 def checkin_detail(checkin_id: int):
     try:
         creds = _db_creds()
@@ -286,6 +297,7 @@ def checkin_detail(checkin_id: int):
 
 @bp.route("/checkins/<int:checkin_id>/update", methods=["POST"])
 @limiter.limit("10/minute")
+@login_required
 def update_checkin_route(checkin_id: int):
     form_data = {"notes": request.form.get("notes", "").strip()}
 
@@ -314,6 +326,7 @@ def update_checkin_route(checkin_id: int):
 
 @bp.route("/checkins/<int:checkin_id>/delete", methods=["POST"])
 @limiter.limit("10/minute")
+@login_required
 def delete_checkin_route(checkin_id: int):
     try:
         delete_checkin(_db_creds(), checkin_id=checkin_id)
@@ -327,6 +340,7 @@ def delete_checkin_route(checkin_id: int):
 
 @bp.route("/checkins/<int:checkin_id>/answers/<int:question_id>/save", methods=["POST"])
 @limiter.limit("10/minute")
+@login_required
 def save_answer_route(checkin_id: int, question_id: int):
     form_data = {
         "answer_text": request.form.get("answer_text", "").strip() or None,
@@ -359,6 +373,7 @@ def save_answer_route(checkin_id: int, question_id: int):
     "/checkins/<int:checkin_id>/answers/<int:question_id>/delete", methods=["POST"]
 )
 @limiter.limit("10/minute")
+@login_required
 def delete_answer_route(checkin_id: int, question_id: int):
     try:
         delete_answer(
