@@ -40,14 +40,17 @@ This feature demonstrates meaningful data summarization beyond basic CRUD operat
   `python-dotenv` and defines `DevelopmentConfig`, `TestingConfig`, and
   `ProductionConfig` classes. All rely on the `northflow` database by
   default.
+- **Single-user perspective**: The app is configured for single-user mode
+  with a hardcoded Demo User (ID 1). All routes auto-filter to the current user.
+  User authentication system is planned (see [TODO.md](TODO.md#security)).
 - **Blueprints**: `app/routes/main.py` exposes:
-  - `GET /` – Landing page (redirects to `/questions` if logged in, `/login` otherwise)
-  - `GET/POST /login` – DB connection gate (host/user/password/port configurable)
-  - `GET /questions` – Manage custom user questions (CRUD via stored procedures)
-  - `GET /checkins` – View and filter user check-ins
-  - `POST /checkins/create` – Create a new check-in
-  - `GET /checkins/<id>` – View/edit check-in and answer questions
+  - `GET /` – Landing page with mindfulness check-in interface
+  - `GET /questions` – Manage your custom check-in questions (CRUD via stored procedures)
+  - `GET /checkins` – View and filter your historical check-ins
+  - `POST /checkins/create` – Create a new check-in session
+  - `GET /checkins/<id>` – Answer your custom questions for a check-in
   - `POST /checkins/<id>/update` – Update check-in notes
+  - `GET /summary` – View aggregated daily statistics (mood, scores, trends)
   - `POST /checkins/<id>/delete` – Delete check-in and all answers
   - `POST /checkins/<id>/answers/<question_id>/save` – Save/update answer
   - `POST /checkins/<id>/answers/<question_id>/delete` – Remove answer
