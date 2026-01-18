@@ -5,6 +5,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
 
+from app.auth import init_oauth
+
 csrf = CSRFProtect()
 limiter = Limiter(key_func=get_remote_address)
 
@@ -31,6 +33,9 @@ def create_app(config_name="default"):
     # Initialize rate limiting
     limiter.init_app(app)
 
+    # Initialize OAuth authentication
+    init_oauth(app)
+
     # Add security headers
     @app.after_request
     def set_security_headers(response):
@@ -46,8 +51,9 @@ def create_app(config_name="default"):
         return response
 
     # Register blueprints
-    from app.routes import main
+    from app.routes import auth, main
 
+    app.register_blueprint(auth.bp)
     app.register_blueprint(main.bp)
 
     return app

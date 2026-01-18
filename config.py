@@ -49,14 +49,18 @@ class Config:
     # Google OAuth
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-    GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+    GOOGLE_DISCOVERY_URL = (
+        "https://accounts.google.com/.well-known/openid-configuration"
+    )
 
     # GitHub OAuth
     GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
     GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 
     # OAuth Redirect URIs (will be set per environment)
-    OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:5000/auth/callback")
+    OAUTH_REDIRECT_URI = os.getenv(
+        "OAUTH_REDIRECT_URI", "http://localhost:5000/auth/callback"
+    )
 
 
 class DevelopmentConfig(Config):

@@ -88,30 +88,35 @@ for current infrastructure details, environment setup, and rollback procedures.
     - [x] Updated Demo User seed data to include NULL OAuth values
     - [x] Test schema changes with schema execution (27 statements OK)
   
-  - [ ] **4.3 OAuth Integration**
-    - [ ] Create `app/auth.py` module for OAuth logic
-    - [ ] Initialize OAuth in `app/__init__.py`
-    - [ ] Register Google OAuth provider with Authlib
-    - [ ] Register GitHub OAuth provider with Authlib
-    - [ ] Add OAuth configuration (scopes: openid email profile)
+  - [x] **4.3 OAuth Integration** ✅
+    - [x] Create `app/auth.py` module for OAuth logic
+    - [x] Initialize OAuth in `app/__init__.py`
+    - [x] Register Google OAuth provider with Authlib (scopes: openid email profile)
+    - [x] Register GitHub OAuth provider with Authlib (scope: user:email)
+    - [x] Add OAuth configuration and provider URLs
+    - [x] Verify both providers registered successfully
   
-  - [ ] **4.4 Authentication Routes**
-    - [ ] Create `app/routes/auth.py` blueprint
-    - [ ] Add `GET /auth/login` - Show login page with OAuth buttons
-    - [ ] Add `GET /auth/login/google` - Redirect to Google OAuth
-    - [ ] Add `GET /auth/login/github` - Redirect to GitHub OAuth
-    - [ ] Add `GET /auth/callback/google` - Handle Google OAuth callback
-    - [ ] Add `GET /auth/callback/github` - Handle GitHub OAuth callback
-    - [ ] Add `GET /auth/logout` - Clear session and redirect
+  - [x] **4.4 Authentication Routes** ✅
+    - [x] Create `app/routes/auth.py` blueprint
+    - [x] Add `GET /auth/login` - Show login page with OAuth buttons
+    - [x] Add `GET /auth/login/google` - Redirect to Google OAuth
+    - [x] Add `GET /auth/login/github` - Redirect to GitHub OAuth
+    - [x] Add `GET /auth/callback/google` - Handle Google OAuth callback
+    - [x] Add `GET /auth/callback/github` - Handle GitHub OAuth callback
+    - [x] Add `GET /auth/logout` - Clear session and redirect
+    - [x] Register auth blueprint in app factory
+    - [x] Replace old DB credential login.html with OAuth login page
   
-  - [ ] **4.5 User Management**
-    - [ ] Create DAL functions for OAuth user operations:
-      - [ ] `get_user_by_oauth(provider, oauth_id)` - Find existing user
-      - [ ] `get_user_by_email(email)` - Find user by email
-      - [ ] `create_oauth_user(oauth_provider, oauth_id, email, name)` - Auto-register
-      - [ ] `update_last_login(user_id)` - Track login time
-    - [ ] Implement auto-registration on first OAuth login
-    - [ ] Handle email conflicts gracefully
+  - [ ] **4.5 User Management** ✅
+    - [x] Create DAL functions for OAuth user operations:
+      - [x] `get_user_by_oauth(provider, oauth_id)` - Find existing user
+      - [x] `get_user_by_email(email)` - Find user by email
+      - [x] `create_oauth_user(oauth_provider, oauth_id, email, name)` - Auto-register
+      - [x] `update_last_login(user_id)` - Track login time
+    - [x] Implement auto-registration on first OAuth login
+    - [x] Handle email conflicts gracefully
+    - [x] Store `user_id` in session after successful OAuth
+    - [x] Update OAuth callbacks to call DAL functions
   
   - [ ] **4.6 Session Management**
     - [ ] Store `user_id` in Flask session after successful OAuth

@@ -306,3 +306,67 @@ table td input {
 .details-section {
     margin-bottom: 1.5rem;
 }
+
+/* Login Page */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    text-align: center;
+}
+
+.login-header {
+    margin-bottom: 10px;
+}
+
+.login-tagline {
+    color: #666;
+    margin-bottom: 40px;
+}
+
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-card h2 {
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+.oauth-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 24px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 16px;
+    transition: background-color 0.2s;
+}
+
+.oauth-button:hover {
+    background-color: #f8f9fa;
+}
+
+.oauth-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+.login-security-notice {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #666;
+}
+
+.login-footer {
+    margin-top: 30px;
+    font-size: 12px;
+    color: #999;
+}
