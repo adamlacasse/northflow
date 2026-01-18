@@ -77,15 +77,16 @@ for current infrastructure details, environment setup, and rollback procedures.
     - [x] Add OAuth config to `config.py` (client IDs, secrets, redirect URIs)
     - [x] Update `.env` with OAuth credentials (placeholder values for now)
   
-  - [ ] **4.2 Database Schema Updates**
-    - [ ] Modify `users` table in `schema.sql`:
-      - [ ] Add `oauth_provider` VARCHAR(50) column (stores 'google' or 'github')
-      - [ ] Add `oauth_id` VARCHAR(255) UNIQUE column (stores provider's user ID)
-      - [ ] Add `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      - [ ] Add `last_login` TIMESTAMP NULL
-      - [ ] Make `email` UNIQUE (required for OAuth)
-    - [ ] Create migration script or update schema
-    - [ ] Test schema changes with `invoke execute-schema`
+  - [x] **4.2 Database Schema Updates** ✅
+    - [x] Modify `users` table in `schema.sql`:
+      - [x] Add `oauth_provider` VARCHAR(50) column (stores 'google' or 'github')
+      - [x] Add `oauth_id` VARCHAR(255) column (stores provider's user ID)
+      - [x] Add `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP (already existed)
+      - [x] Add `last_login` TIMESTAMP NULL
+      - [x] Make `email` UNIQUE (already existed)
+      - [x] Add UNIQUE KEY unique_oauth (oauth_provider, oauth_id)
+    - [x] Updated Demo User seed data to include NULL OAuth values
+    - [x] Test schema changes with schema execution (27 statements OK)
   
   - [ ] **4.3 OAuth Integration**
     - [ ] Create `app/auth.py` module for OAuth logic

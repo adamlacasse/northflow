@@ -12,9 +12,13 @@ CREATE TABLE users (
     first_name VARCHAR(50),
     last_name VARCHAR(50),
     email VARCHAR(100) NOT NULL UNIQUE,
+    oauth_provider VARCHAR(50),
+    oauth_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ON UPDATE CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_oauth (oauth_provider, oauth_id)
 );
 
 CREATE TABLE user_questions (
@@ -74,8 +78,9 @@ CREATE TABLE answers (
 -- Bootstrap user for development
 -- This single user is required for the app to function until authentication is implemented.
 -- When auth is live, this should be removed and users will register themselves.
-INSERT INTO users (first_name, last_name, email)
-VALUES ('Demo', 'User', 'demo@northflow.app');
+-- Note: oauth_provider and oauth_id are NULL for this legacy user (pre-OAuth)
+INSERT INTO users (first_name, last_name, email, oauth_provider, oauth_id)
+VALUES ('Demo', 'User', 'demo@northflow.app', NULL, NULL);
 
 -- ------------------------------------------------------------------
 -- Views / Procedures
