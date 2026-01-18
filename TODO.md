@@ -65,12 +65,103 @@ for current infrastructure details, environment setup, and rollback procedures.
   - ✅ Invalid CSRF requests return 400 error
   - ✅ All forms tested and working
 
-- [ ] **4. Implement proper authentication**
-  - Replace DB credential login gate with user-based auth
-  - Add user registration, password hashing (bcrypt), session management
-  - Implement password reset flow
-  - Add email verification (optional but recommended)
+- [ ] **4. Implement proper authentication (OAuth 2.0)**
+  - **Strategy**: Third-party OAuth (Google + GitHub) - no password storage
+  - **Library**: Authlib for Flask OAuth integration
   - **Note**: Comprehensive error handling completed (structured logging + generic user messages)
+  
+  **Implementation Checklist:**
+  - [ ] **4.1 Setup & Dependencies**
+    - [ ] Add `authlib` and `requests` to `pyproject.toml`
+    - [ ] Install dependencies with pip
+    - [ ] Add OAuth config to `config.py` (client IDs, secrets, redirect URIs)
+    - [ ] Update `.env` with OAuth credentials (placeholder values for now)
+  
+  - [ ] **4.2 Database Schema Updates**
+    - [ ] Modify `users` table in `schema.sql`:
+      - [ ] Add `oauth_provider` VARCHAR(50) column (stores 'google' or 'github')
+      - [ ] Add `oauth_id` VARCHAR(255) UNIQUE column (stores provider's user ID)
+      - [ ] Add `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      - [ ] Add `last_login` TIMESTAMP NULL
+      - [ ] Make `email` UNIQUE (required for OAuth)
+    - [ ] Create migration script or update schema
+    - [ ] Test schema changes with `invoke execute-schema`
+  
+  - [ ] **4.3 OAuth Integration**
+    - [ ] Create `app/auth.py` module for OAuth logic
+    - [ ] Initialize OAuth in `app/__init__.py`
+    - [ ] Register Google OAuth provider with Authlib
+    - [ ] Register GitHub OAuth provider with Authlib
+    - [ ] Add OAuth configuration (scopes: openid email profile)
+  
+  - [ ] **4.4 Authentication Routes**
+    - [ ] Create `app/routes/auth.py` blueprint
+    - [ ] Add `GET /auth/login` - Show login page with OAuth buttons
+    - [ ] Add `GET /auth/login/google` - Redirect to Google OAuth
+    - [ ] Add `GET /auth/login/github` - Redirect to GitHub OAuth
+    - [ ] Add `GET /auth/callback/google` - Handle Google OAuth callback
+    - [ ] Add `GET /auth/callback/github` - Handle GitHub OAuth callback
+    - [ ] Add `GET /auth/logout` - Clear session and redirect
+  
+  - [ ] **4.5 User Management**
+    - [ ] Create DAL functions for OAuth user operations:
+      - [ ] `get_user_by_oauth(provider, oauth_id)` - Find existing user
+      - [ ] `get_user_by_email(email)` - Find user by email
+      - [ ] `create_oauth_user(oauth_provider, oauth_id, email, name)` - Auto-register
+      - [ ] `update_last_login(user_id)` - Track login time
+    - [ ] Implement auto-registration on first OAuth login
+    - [ ] Handle email conflicts gracefully
+  
+  - [ ] **4.6 Session Management**
+    - [ ] Store `user_id` in Flask session after successful OAuth
+    - [ ] Update `_get_current_user()` in `main.py` to read from session
+    - [ ] Create `@login_required` decorator for protected routes
+    - [ ] Apply `@login_required` to all sensitive routes
+    - [ ] Add session timeout handling
+  
+  - [ ] **4.7 UI Updates**
+    - [ ] Create `app/templates/login.html` with OAuth buttons
+    - [ ] Update `app/templates/base.html`:
+      - [ ] Add login/logout links to navigation
+      - [ ] Show current user name/email when logged in
+      - [ ] Add "Sign in with Google" and "Sign in with GitHub" styling
+    - [ ] Remove old DB credential login UI
+    - [ ] Add logout button to nav
+  
+  - [ ] **4.8 Remove Old Login System**
+    - [ ] Delete `GET/POST /login` DB credential routes from `main.py`
+    - [ ] Remove `_db_creds()` function (no longer needed)
+    - [ ] Update all DAL calls to use environment config instead of session creds
+    - [ ] Remove old login template if separate from new one
+  
+  - [ ] **4.9 OAuth Provider Setup (External)**
+    - [ ] Register app with Google Cloud Console
+      - [ ] Create OAuth 2.0 Client ID
+      - [ ] Set authorized redirect URIs
+      - [ ] Copy client ID and secret to `.env`
+    - [ ] Register app with GitHub
+      - [ ] Create OAuth App in GitHub settings
+      - [ ] Set authorization callback URL
+      - [ ] Copy client ID and secret to `.env`
+    - [ ] Document OAuth setup in README.md
+  
+  - [ ] **4.10 Testing & Validation**
+    - [ ] Test Google OAuth login flow end-to-end
+    - [ ] Test GitHub OAuth login flow end-to-end
+    - [ ] Test auto-registration for new users
+    - [ ] Test returning user login
+    - [ ] Test logout and session clearing
+    - [ ] Test `@login_required` on protected routes
+    - [ ] Test error handling (OAuth failures, email conflicts)
+    - [ ] Update existing tests to work with OAuth
+    - [ ] Add tests for OAuth user creation
+  
+  - [ ] **4.11 Documentation**
+    - [ ] Update README.md with OAuth setup instructions
+    - [ ] Document how to get Google/GitHub OAuth credentials
+    - [ ] Add OAuth callback URLs to documentation
+    - [ ] Update SECURITY_AUDIT.md with OAuth implementation notes
+    - [ ] Document session management approach
 
 - [x] **5. Add input validation and sanitization**
   - ✅ COMPLETED: Marshmallow 4.2.0 integrated for validation
