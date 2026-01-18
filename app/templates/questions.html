@@ -1,18 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Manage Questions{% endblock %}
+{% block title %}My Questions{% endblock %}
 {% block content %}
     <section class="card">
-        <h2>Create Question</h2>
+        <h2>Create New Question</h2>
         <form method="post"
               action="{{ url_for("main.create_question") }}"
               class="form-grid">
-            <label>
-                User
-                <select name="user_id" required>
-                    <option value="" disabled selected>Select a user</option>
-                    {% for user in users %}<option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>{% endfor %}
-                </select>
-            </label>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>
                 Question Text
                 <textarea name="question_text" rows="2" required></textarea>
@@ -40,12 +34,11 @@
         </form>
     </section>
     <section class="card">
-        <h2>Existing Questions</h2>
+        <h2>My Questions</h2>
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>User</th>
                         <th>Text</th>
                         <th>Type</th>
                         <th>Active</th>
@@ -58,13 +51,14 @@
                         <form id="update-{{ q.id }}"
                               method="post"
                               action="{{ url_for('main.update_question', question_id=q.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         </form>
                         <form id="delete-{{ q.id }}"
                               method="post"
                               action="{{ url_for('main.delete_question_route', question_id=q.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         </form>
                         <tr>
-                            <td>{{ q.user_name }}</td>
                             <td>
                                 <textarea form="update-{{ q.id }}" name="question_text" rows="2" required>{{ q.question_text }}</textarea>
                             </td>

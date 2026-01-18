@@ -13,7 +13,8 @@ The live UI is intentionally minimal; the focus is the MySQL schema + Python DAL
 
 Advanced feature concept is tracked in [ADVANCED_FEATURE.md](ADVANCED_FEATURE.md).
 
-Action items are tracked in project docs and issues (no `TODO.md` is required by this repo).
+**Production roadmap and action items** are tracked in [TODO.md](../../TODO.md) at the project root.
+This includes the transition from course project to production-ready application.
 
 ## Where important stuff lives
 

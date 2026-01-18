@@ -1,18 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Check-ins{% endblock %}
+{% block title %}My Check-ins{% endblock %}
 {% block content %}
     <section class="card">
         <h2>Create Check-in</h2>
         <form method="post"
               action="{{ url_for("main.create_checkin_route") }}"
               class="form-grid">
-            <label>
-                User
-                <select name="user_id" required>
-                    <option value="" disabled selected>Select a user</option>
-                    {% for user in users %}<option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>{% endfor %}
-                </select>
-            </label>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>
                 Notes (optional)
                 <textarea name="notes"
@@ -25,26 +19,7 @@
         </form>
     </section>
     <section class="card">
-        <h2>Filter Check-ins</h2>
-        <form method="get"
-              action="{{ url_for("main.checkins") }}"
-              class="form-grid">
-            <label>
-                User
-                <select name="user_id" required onchange="this.form.submit()">
-                    <option value="">Select a user</option>
-                    {% for user in users %}
-                        <option value="{{ user.id }}"
-                                {% if selected_user_id and selected_user_id|int == user.id|int %}selected{% endif %}>
-                            {{ user.first_name }} {{ user.last_name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </label>
-        </form>
-    </section>
-    <section class="card">
-        <h2>Check-ins</h2>
+        <h2>My Check-ins</h2>
         {% if checkins %}
             <div class="table-wrapper">
                 <table>
@@ -70,6 +45,7 @@
                                     <form method="post"
                                           action="{{ url_for('main.delete_checkin_route', checkin_id=c.id) }}"
                                           class="form-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit"
                                                 class="btn small danger"
                                                 onclick="return confirm('Delete this check-in and all answers?');">

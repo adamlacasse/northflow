@@ -1,21 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Daily Summary{% endblock %}
+{% block title %}My Summary{% endblock %}
 {% block content %}
     <section class="card">
-        <h2>Daily Check-in Summary</h2>
+        <h2>My Daily Check-in Summary</h2>
         <form method="get" action="{{ url_for("main.summary") }}" class="form-grid">
-            <label>
-                User (optional)
-                <select name="user_id">
-                    <option value="">All users</option>
-                    {% for user in users %}
-                        <option value="{{ user.id }}"
-                                {% if selected_user_id == user.id %}selected{% endif %}>
-                            {{ user.first_name }} {{ user.last_name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </label>
             <label>
                 Start date (optional)
                 <input type="date" name="start_date" value="{{ start_date or '' }}">
@@ -37,7 +25,6 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>User</th>
                             <th>Date</th>
                             <th>Check-ins</th>
                             <th>Answers</th>
@@ -49,7 +36,6 @@
                     <tbody>
                         {% for row in summary_rows %}
                             <tr>
-                                <td>{{ row.user_name }}</td>
                                 <td>{{ row.checkin_date }}</td>
                                 <td>{{ row.total_checkins }}</td>
                                 <td>{{ row.total_answers }}</td>
