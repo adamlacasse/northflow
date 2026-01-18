@@ -12,6 +12,37 @@ for current infrastructure details, environment setup, and rollback procedures.
 
 ---
 
+## UX & User Perspective Shift
+
+- [ ] **0. Shift from admin-view to single-user perspective**
+  - **PRIORITY: Do this before authentication**
+  - Current state: App shows all users, requires selecting user in dropdowns
+  - Desired state: Each user sees only their own data
+  - **Implementation steps:**
+    1. Add "current user" concept (hardcoded user ID in session for now, will become authenticated user later)
+    2. Remove user selection dropdowns from all pages (Questions, Check-ins, Summary)
+    3. Update all routes to automatically filter by current user
+    4. Change UI language: "Select a user" → "My Questions", "My Check-ins", "My Summary"
+    5. Update questions page: Only show current user's questions, hide user column
+    6. Update check-ins page: Only show current user's check-ins automatically
+    7. Update summary page: Only show current user's summary data
+    8. Simplify data access layer calls to always include current user context
+    9. Add user switcher in dev mode (temporary, for testing different user views)
+    10. When authentication is implemented, replace hardcoded user with `session['user_id']` from auth
+  - **Files to update:**
+    - `app/routes/main.py` - Add `_get_current_user()` helper, update all routes
+    - `app/templates/questions.html` - Remove user dropdown, update language
+    - `app/templates/checkins.html` - Remove user dropdown, auto-load user's check-ins
+    - `app/templates/summary.html` - Remove user filter (or make it admin-only later)
+    - `app/templates/base.html` - Update nav language to reflect "my" perspective
+  - **Benefits:**
+    - Clearer UX aligned with production use case
+    - Data isolation ready for multi-tenant auth
+    - Simplified user flows (no selection needed)
+    - Natural transition to authenticated sessions
+
+---
+
 ## Security (Items 1–5, 10)
 
 - [ ] **1. Audit security vulnerabilities**
