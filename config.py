@@ -45,6 +45,19 @@ class Config:
     RATELIMIT_STORAGE_URL = "memory://"
     RATELIMIT_DEFAULT = "200/hour"  # Global default
 
+    # OAuth Configuration
+    # Google OAuth
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+    GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+
+    # GitHub OAuth
+    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+
+    # OAuth Redirect URIs (will be set per environment)
+    OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:5000/auth/callback")
+
 
 class DevelopmentConfig(Config):
     """Development configuration."""
@@ -52,6 +65,8 @@ class DevelopmentConfig(Config):
     DEBUG = True
     # For local development without HTTPS
     SESSION_COOKIE_SECURE = False
+    # OAuth redirect for local development
+    OAUTH_REDIRECT_URI = "http://localhost:5000/auth/callback"
 
 
 class TestingConfig(Config):

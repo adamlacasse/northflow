@@ -71,11 +71,11 @@ for current infrastructure details, environment setup, and rollback procedures.
   - **Note**: Comprehensive error handling completed (structured logging + generic user messages)
   
   **Implementation Checklist:**
-  - [ ] **4.1 Setup & Dependencies**
-    - [ ] Add `authlib` and `requests` to `pyproject.toml`
-    - [ ] Install dependencies with pip
-    - [ ] Add OAuth config to `config.py` (client IDs, secrets, redirect URIs)
-    - [ ] Update `.env` with OAuth credentials (placeholder values for now)
+  - [x] **4.1 Setup & Dependencies** ✅
+    - [x] Add `authlib` and `requests` to `pyproject.toml`
+    - [x] Install dependencies with pip (authlib 1.6.6, requests 2.32.5)
+    - [x] Add OAuth config to `config.py` (client IDs, secrets, redirect URIs)
+    - [x] Update `.env` with OAuth credentials (placeholder values for now)
   
   - [ ] **4.2 Database Schema Updates**
     - [ ] Modify `users` table in `schema.sql`:
