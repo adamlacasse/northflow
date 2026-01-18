@@ -100,9 +100,17 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=your_mysql_user
 DB_PASSWORD=your_mysql_password
-SECRET_KEY=change-me
+SECRET_KEY=your-secure-random-key
 FLASK_ENV=development
 ```
+
+**⚠️ Important**: The `SECRET_KEY` environment variable is **required** and must be a secure random string. Generate one with:
+
+```bash
+python3 -c 'import secrets; print(secrets.token_hex(32))'
+```
+
+The app will fail to start if `SECRET_KEY` is not set in the environment.
 
 ### Database Initialization
 
@@ -155,6 +163,20 @@ curl http://localhost:5000/health
 
 `/health` uses the active session connection if you have already connected via
 `/login`. Otherwise, it falls back to the `.env` database settings.
+
+## Security
+
+NorthFlow includes baseline web application security controls:
+
+- **CSRF Protection**: All forms are protected with Flask-WTF CSRF tokens
+- **Input Validation**: Marshmallow schemas validate all user input (length, type, format)
+- **Error Handling**: Errors are logged server-side; generic messages shown to users
+- **HTTP Security Headers**: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, etc.
+- **Secure Sessions**: HTTPOnly, SameSite, and Secure cookie flags enabled
+- **Secure Configuration**: `SECRET_KEY` required from environment (no defaults)
+- **SQL Parameterization**: All database queries use prepared statements
+
+See [`.agent/SECURITY_AUDIT.md`](.agent/SECURITY_AUDIT.md) for detailed security audit findings and implementation status.
 
 ## Tooling & Quality Gates
 

@@ -1,5 +1,6 @@
 """Main routes blueprint."""
 
+import logging
 from typing import Any, Dict
 
 from flask import (
@@ -11,6 +12,7 @@ from flask import (
     url_for,
 )
 
+from app import limiter
 from app.dal import DatabaseConnection, DatabaseError
 from app.services.answers import (
     add_answer,
@@ -31,9 +33,17 @@ from app.services.user_questions import (
     list_user_questions,
     update_user_question,
 )
+from app.validators import (
+    AnswerSchema,
+    CheckinSchema,
+    QuestionSchema,
+    SummaryFilterSchema,
+    validate_form,
+)
 from config import Config
 
 bp = Blueprint("main", __name__)
+logger = logging.getLogger(__name__)
 
 
 def _db_creds() -> Dict[str, Any]:
@@ -50,13 +60,13 @@ def _db_creds() -> Dict[str, Any]:
 def _get_current_user() -> int:
     """Get current user ID.
 
-    For now, returns hardcoded user ID (Avery Hart - ID 1).
+    For now, returns hardcoded user ID (Demo User - ID 1).
     When authentication is implemented, this will return session['user_id'].
 
     TODO: Replace with authenticated user from session after auth is implemented.
     """
     # Hardcoded for development - will be replaced with session['user_id']
-    return 1  # Avery Hart
+    return 1  # Demo User
 
 
 @bp.route("/")
@@ -75,7 +85,11 @@ def questions():
         my_questions = [q for q in questions if q["user_id"] == current_user_id]
         return render_template("questions.html", questions=my_questions)
     except DatabaseError as exc:
-        flash(f"Unable to load questions: {exc}", "danger")
+        logger.error(f"Database error loading questions: {exc}", exc_info=True)
+        flash(
+            "Unable to load questions. Please try again.",
+            "danger",
+        )
         return render_template("questions.html", questions=[])
 
 
@@ -85,13 +99,21 @@ def summary():
     end_date = request.args.get("end_date", "").strip() or None
 
     try:
+        # Validate date parameters
+        is_valid, cleaned, error_msg = validate_form(
+            SummaryFilterSchema, {"start_date": start_date, "end_date": end_date}
+        )
+        if not is_valid:
+            flash(f"Invalid filters: {error_msg}", "warning")
+            cleaned = {}
+
         creds = _db_creds()
         current_user_id = _get_current_user()
         summary_rows = list_daily_summary(
             creds,
             user_id=current_user_id,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=cleaned.get("start_date") if is_valid else start_date,
+            end_date=cleaned.get("end_date") if is_valid else end_date,
         )
         return render_template(
             "summary.html",
@@ -100,58 +122,89 @@ def summary():
             end_date=end_date,
         )
     except DatabaseError as exc:
-        flash(f"Unable to load summary: {exc}", "danger")
+        logger.error(f"Database error loading summary: {exc}", exc_info=True)
+        flash("Unable to load summary. Please try again.", "danger")
         return render_template("summary.html", summary_rows=[])
 
 
 @bp.route("/questions/create", methods=["POST"])
+@limiter.limit("10/minute")
 def create_question():
-    form = request.form
+    form_data = {
+        "question_text": request.form.get("question_text", "").strip(),
+        "question_type": request.form.get("question_type", "text"),
+        "is_active": bool(request.form.get("is_active")),
+        "sort_order": request.form.get("sort_order", "0"),
+    }
+
+    # Validate input
+    is_valid, cleaned, error_msg = validate_form(QuestionSchema, form_data)
+    if not is_valid:
+        flash(f"Invalid question: {error_msg}", "danger")
+        return redirect(url_for("main.questions"))
+
     try:
         create_user_question(
             _db_creds(),
             user_id=_get_current_user(),
-            question_text=form.get("question_text", "").strip(),
-            question_type=form.get("question_type", "text"),
-            is_active=bool(form.get("is_active")),
-            sort_order=int(form.get("sort_order", 0)),
+            question_text=cleaned["question_text"],
+            question_type=cleaned["question_type"],
+            is_active=cleaned["is_active"],
+            sort_order=int(cleaned["sort_order"]),
         )
         flash("Question created.", "success")
     except DatabaseError as exc:
-        flash(f"Create failed: {exc}", "danger")
+        logger.error(f"Database error creating question: {exc}", exc_info=True)
+        flash("Unable to create question. Please try again.", "danger")
 
     return redirect(url_for("main.questions"))
 
 
 @bp.route("/questions/<int:question_id>/update", methods=["POST"])
+@limiter.limit("10/minute")
 def update_question(question_id: int):
-    form = request.form
+    form_data = {
+        "question_text": request.form.get("question_text", "").strip(),
+        "question_type": request.form.get("question_type", "text"),
+        "is_active": bool(request.form.get("is_active")),
+        "sort_order": request.form.get("sort_order", "0"),
+    }
+
+    # Validate input
+    is_valid, cleaned, error_msg = validate_form(QuestionSchema, form_data)
+    if not is_valid:
+        flash(f"Invalid question: {error_msg}", "danger")
+        return redirect(url_for("main.questions"))
+
     try:
         success = update_user_question(
             _db_creds(),
             question_id=question_id,
-            question_text=form.get("question_text", "").strip(),
-            question_type=form.get("question_type", "text"),
-            is_active=bool(form.get("is_active")),
-            sort_order=int(form.get("sort_order", 0)),
+            question_text=cleaned["question_text"],
+            question_type=cleaned["question_type"],
+            is_active=cleaned["is_active"],
+            sort_order=int(cleaned["sort_order"]),
         )
         if success:
             flash("Question updated.", "success")
         else:
-            flash("No question updated (check ID).", "warning")
+            flash("Question not found.", "warning")
     except DatabaseError as exc:
-        flash(f"Update failed: {exc}", "danger")
+        logger.error(f"Database error updating question: {exc}", exc_info=True)
+        flash("Unable to update question. Please try again.", "danger")
 
     return redirect(url_for("main.questions"))
 
 
 @bp.route("/questions/<int:question_id>/delete", methods=["POST"])
+@limiter.limit("10/minute")
 def delete_question_route(question_id: int):
     try:
         delete_user_question(_db_creds(), question_id=question_id)
         flash("Question deleted.", "info")
     except DatabaseError as exc:
-        flash(f"Delete failed: {exc}", "danger")
+        logger.error(f"Database error deleting question: {exc}", exc_info=True)
+        flash("Unable to delete question. Please try again.", "danger")
 
     return redirect(url_for("main.questions"))
 
@@ -168,25 +221,33 @@ def checkins():
             checkins=checkins_list,
         )
     except DatabaseError as exc:
-        flash(f"Unable to load check-ins: {exc}", "danger")
+        logger.error(f"Database error loading check-ins: {exc}", exc_info=True)
+        flash("Unable to load check-ins. Please try again.", "danger")
         return render_template("checkins.html", checkins=[])
 
 
 @bp.route("/checkins/create", methods=["POST"])
+@limiter.limit("10/minute")
 def create_checkin_route():
-    form = request.form
-    notes = form.get("notes", "").strip()
+    form_data = {"notes": request.form.get("notes", "").strip()}
+
+    # Validate input
+    is_valid, cleaned, error_msg = validate_form(CheckinSchema, form_data)
+    if not is_valid:
+        flash(f"Invalid check-in: {error_msg}", "danger")
+        return redirect(url_for("main.checkins"))
 
     try:
         checkin_id = create_checkin(
             _db_creds(),
             user_id=_get_current_user(),
-            notes=notes,
+            notes=cleaned.get("notes"),
         )
         flash("Check-in created. Add your answers below.", "success")
         return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
     except DatabaseError as exc:
-        flash(f"Create check-in failed: {exc}", "danger")
+        logger.error(f"Database error creating check-in: {exc}", exc_info=True)
+        flash("Unable to create check-in. Please try again.", "danger")
         return redirect(url_for("main.checkins"))
 
 
@@ -216,62 +277,80 @@ def checkin_detail(checkin_id: int):
             answers=answers_dict,
         )
     except DatabaseError as exc:
-        flash(f"Unable to load check-in: {exc}", "danger")
+        logger.error(f"Database error loading check-in: {exc}", exc_info=True)
+        flash("Unable to load check-in. Please try again.", "danger")
         return render_template(
             "checkin_detail.html", checkin={}, questions=[], answers={}
         )
 
 
 @bp.route("/checkins/<int:checkin_id>/update", methods=["POST"])
+@limiter.limit("10/minute")
 def update_checkin_route(checkin_id: int):
-    form = request.form
-    notes = form.get("notes", "").strip()
+    form_data = {"notes": request.form.get("notes", "").strip()}
+
+    # Validate input
+    is_valid, cleaned, error_msg = validate_form(CheckinSchema, form_data)
+    if not is_valid:
+        flash(f"Invalid notes: {error_msg}", "danger")
+        return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
 
     try:
         success = update_checkin(
             _db_creds(),
             checkin_id=checkin_id,
-            notes=notes,
+            notes=cleaned.get("notes"),
         )
         if success:
             flash("Check-in notes updated.", "success")
         else:
             flash("Check-in not found.", "warning")
     except DatabaseError as exc:
-        flash(f"Update failed: {exc}", "danger")
+        logger.error(f"Database error updating check-in: {exc}", exc_info=True)
+        flash("Unable to update check-in. Please try again.", "danger")
 
     return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
 
 
 @bp.route("/checkins/<int:checkin_id>/delete", methods=["POST"])
+@limiter.limit("10/minute")
 def delete_checkin_route(checkin_id: int):
     try:
         delete_checkin(_db_creds(), checkin_id=checkin_id)
         flash("Check-in deleted.", "info")
         return redirect(url_for("main.checkins"))
     except DatabaseError as exc:
-        flash(f"Delete failed: {exc}", "danger")
+        logger.error(f"Database error deleting check-in: {exc}", exc_info=True)
+        flash("Unable to delete check-in. Please try again.", "danger")
         return redirect(url_for("main.checkins"))
 
 
 @bp.route("/checkins/<int:checkin_id>/answers/<int:question_id>/save", methods=["POST"])
+@limiter.limit("10/minute")
 def save_answer_route(checkin_id: int, question_id: int):
-    form = request.form
-    answer_text = form.get("answer_text", "").strip() or None
-    score_raw = form.get("score", "").strip()
-    score = float(score_raw) if score_raw else None
+    form_data = {
+        "answer_text": request.form.get("answer_text", "").strip() or None,
+        "score": request.form.get("score", "").strip() or None,
+    }
+
+    # Validate input
+    is_valid, cleaned, error_msg = validate_form(AnswerSchema, form_data)
+    if not is_valid:
+        flash(f"Invalid answer: {error_msg}", "danger")
+        return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
 
     try:
         add_answer(
             _db_creds(),
             checkin_id=checkin_id,
             question_id=question_id,
-            answer_text=answer_text,
-            score=score,
+            answer_text=cleaned.get("answer_text"),
+            score=cleaned.get("score"),
         )
         flash("Answer saved.", "success")
     except DatabaseError as exc:
-        flash(f"Save answer failed: {exc}", "danger")
+        logger.error(f"Database error saving answer: {exc}", exc_info=True)
+        flash("Unable to save answer. Please try again.", "danger")
 
     return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
 
@@ -279,6 +358,7 @@ def save_answer_route(checkin_id: int, question_id: int):
 @bp.route(
     "/checkins/<int:checkin_id>/answers/<int:question_id>/delete", methods=["POST"]
 )
+@limiter.limit("10/minute")
 def delete_answer_route(checkin_id: int, question_id: int):
     try:
         delete_answer(
@@ -288,7 +368,8 @@ def delete_answer_route(checkin_id: int, question_id: int):
         )
         flash("Answer deleted.", "info")
     except DatabaseError as exc:
-        flash(f"Delete answer failed: {exc}", "danger")
+        logger.error(f"Database error deleting answer: {exc}", exc_info=True)
+        flash("Unable to delete answer. Please try again.", "danger")
 
     return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
 
@@ -301,4 +382,5 @@ def health():
         db.close()
         return {"status": "healthy", "database": "connected"}, 200
     except DatabaseError as e:
-        return {"status": "unhealthy", "error": str(e)}, 503
+        logger.error(f"Health check failed: {e}", exc_info=True)
+        return {"status": "unhealthy", "error": "Database connection failed"}, 503

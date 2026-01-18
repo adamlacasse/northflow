@@ -6,6 +6,7 @@
         <form method="post"
               action="{{ url_for("main.create_question") }}"
               class="form-grid">
+            {{ csrf_token() }}
             <label>
                 Question Text
                 <textarea name="question_text" rows="2" required></textarea>
@@ -50,10 +51,12 @@
                         <form id="update-{{ q.id }}"
                               method="post"
                               action="{{ url_for('main.update_question', question_id=q.id) }}">
+                            {{ csrf_token() }}
                         </form>
                         <form id="delete-{{ q.id }}"
                               method="post"
                               action="{{ url_for('main.delete_question_route', question_id=q.id) }}">
+                            {{ csrf_token() }}
                         </form>
                         <tr>
                             <td>
