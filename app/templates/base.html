@@ -19,20 +19,20 @@
             <nav>
                 <div class="container">
                     <h1>
-                        <a href="{{ url_for("main.questions") }}">Northflow</a>
+                        <a href="{% if session.user_id %}{{ url_for("main.questions") }}{% else %}{{ url_for("auth.login") }}{% endif %}">Northflow</a>
                     </h1>
                     <ul>
-                        <li>
-                            <a href="{{ url_for("main.questions") }}">My Questions</a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for("main.checkins") }}">My Check-ins</a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for("main.summary") }}">My Summary</a>
-                        </li>
-                        {% block nav_links %}{% endblock %}
                         {% if session.user_id %}
+                            <li>
+                                <a href="{{ url_for("main.questions") }}">My Questions</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for("main.checkins") }}">My Check-ins</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for("main.summary") }}">My Summary</a>
+                            </li>
+                            {% block nav_links %}{% endblock %}
                             <li class="user-info">
                                 <span>{{ session.user_name or session.email }}</span>
                             </li>

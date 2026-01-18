@@ -16,7 +16,7 @@
         <form method="post"
               action="{{ url_for('main.update_checkin_route', checkin_id=checkin.id) }}"
               class="form-grid">
-            {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>
                 Notes
                 <textarea name="notes" rows="3">{{ checkin.notes or "" }}</textarea>
@@ -26,7 +26,7 @@
                 <form method="post"
                       action="{{ url_for('main.delete_checkin_route', checkin_id=checkin.id) }}"
                       class="form-inline">
-                    {{ csrf_token() }}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                             class="btn danger"
                             onclick="return confirm('Delete this check-in and all answers?');">Delete Check-in</button>
@@ -43,7 +43,7 @@
                     <form method="post"
                           action="{{ url_for('main.save_answer_route', checkin_id=checkin.id, question_id=q.id) }}"
                           class="form-grid">
-                        {{ csrf_token() }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         {% set answer = answers.get(q.id, {}) %}
                         {% if q.question_type == 'text' %}
                             <label>
@@ -84,8 +84,8 @@
                             {% if answer %}
                                 <form method="post"
                                       action="{{ url_for('main.delete_answer_route', checkin_id=checkin.id, question_id=q.id) }}"
-                                      {{ csrf_token() }}
                                       class="form-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn small danger">Clear</button>
                                 </form>
                             {% endif %}

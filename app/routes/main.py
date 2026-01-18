@@ -136,6 +136,7 @@ def summary():
 @limiter.limit("10/minute")
 @login_required
 def create_question():
+    logger.info(f"create_question called. Session user_id: {session.get('user_id')}")
     form_data = {
         "question_text": request.form.get("question_text", "").strip(),
         "question_type": request.form.get("question_type", "text"),

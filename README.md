@@ -7,8 +7,9 @@ CSC-6302 Database Principles
 
 NorthFlow currently provides:
 
+- **OAuth 2.0 Authentication**: Secure login with Google OAuth (no password storage)
 - A Flask app factory (`app/__init__.py`) that wires configuration,
-  routes, and assets.
+  routes, and assets with CSRF protection, rate limiting, and security headers.
 - A `DatabaseConnection` helper (`app/dal/database_connection.py`) that wraps
   `mysql-connector-python` and standardizes error handling through
   `DatabaseError`.
@@ -17,6 +18,7 @@ NorthFlow currently provides:
   aggregation view.
 - Full CRUD operations for managing check-ins and answers with a clean
   web UI for creating check-ins, recording answers, and viewing historical data.
+- Session-based authentication with protected routes and automatic user context.
 
 ## Advanced Feature: Aggregated Daily Summary
 
@@ -40,22 +42,27 @@ This feature demonstrates meaningful data summarization beyond basic CRUD operat
   `python-dotenv` and defines `DevelopmentConfig`, `TestingConfig`, and
   `ProductionConfig` classes. All rely on the `northflow` database by
   default.
-- **Single-user perspective**: The app is configured for single-user mode
-  with a hardcoded Demo User (ID 1). All routes auto-filter to the current user.
-  User authentication system is planned (see [TODO.md](TODO.md#security)).
-- **Blueprints**: `app/routes/main.py` exposes:
-  - `GET /` – Landing page with mindfulness check-in interface
-  - `GET /questions` – Manage your custom check-in questions (CRUD via stored procedures)
-  - `GET /checkins` – View and filter your historical check-ins
-  - `POST /checkins/create` – Create a new check-in session
-  - `GET /checkins/<id>` – Answer your custom questions for a check-in
-  - `POST /checkins/<id>/update` – Update check-in notes
-  - `GET /summary` – View aggregated daily statistics (mood, scores, trends)
-  - `POST /checkins/<id>/delete` – Delete check-in and all answers
-  - `POST /checkins/<id>/answers/<question_id>/save` – Save/update answer
-  - `POST /checkins/<id>/answers/<question_id>/delete` – Remove answer
-  - `GET /summary` – View aggregated daily check-in statistics with filters
-  - `GET /health` – DB connectivity check (returns JSON 200/503)
+- **Authentication**: OAuth 2.0 with Google (via `authlib`). Users auto-register
+  on first login. Sessions are persistent with 1-hour timeout. All routes except
+  `/health` require authentication via `@login_required` decorator.
+- **Blueprints**:
+  - **`app/routes/auth.py`** exposes:
+    - `GET /auth/login` – OAuth login page with Google sign-in button
+    - `GET /auth/login/google` – Redirect to Google OAuth
+    - `GET /auth/callback/google` – Handle Google OAuth callback (auto-register or login)
+    - `GET /auth/logout` – Clear session and log out
+  - **`app/routes/main.py`** exposes (all protected by `@login_required`):
+    - `GET /` – Redirects to questions page
+    - `GET /questions` – Manage your custom check-in questions (CRUD via stored procedures)
+    - `GET /checkins` – View and filter your historical check-ins
+    - `POST /checkins/create` – Create a new check-in session
+    - `GET /checkins/<id>` – Answer your custom questions for a check-in
+    - `POST /checkins/<id>/update` – Update check-in notes
+    - `GET /summary` – View aggregated daily statistics (mood, scores, trends)
+    - `POST /checkins/<id>/delete` – Delete check-in and all answers
+    - `POST /checkins/<id>/answers/<question_id>/save` – Save/update answer
+    - `POST /checkins/<id>/answers/<question_id>/delete` – Remove answer
+    - `GET /health` – DB connectivity check (returns JSON 200/503, no auth required)
 - **Templates & static assets**: `app/templates` plus `app/static/{css,
   js,images}` provide the UI shell; styles and scripts are deliberately
   minimal and easy to extend.
@@ -96,19 +103,42 @@ Create a `.env` file in the project root (It will be loaded automatically
 by `config.py`):
 
 ```env
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=your_mysql_user
 DB_PASSWORD=your_mysql_password
+
+# Security
 SECRET_KEY=your-secure-random-key
+
+# OAuth Configuration (Google)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Environment
 FLASK_ENV=development
 ```
 
-**⚠️ Important**: The `SECRET_KEY` environment variable is **required** and must be a secure random string. Generate one with:
+**⚠️ Important**:
 
-```bash
-python3 -c 'import secrets; print(secrets.token_hex(32))'
-```
+- The `SECRET_KEY` environment variable is **required** and must be a secure random string. Generate one with:
+
+  ```bash
+  python3 -c 'import secrets; print(secrets.token_hex(32))'
+  ```
+
+- For OAuth to work, you must register your app with Google Cloud Console and add the credentials above.
+
+### Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project (or select existing)
+3. Navigate to "APIs & Services" → "Credentials"
+4. Click "CREATE CREDENTIALS" → "OAuth client ID"
+5. Choose "Web application"
+6. Add authorized redirect URI: `http://localhost:5000/auth/callback/google` (development)
+7. Copy the Client ID and Client Secret to your `.env` file
 
 The app will fail to start if `SECRET_KEY` is not set in the environment.
 
@@ -137,22 +167,28 @@ execute `mysql -u $DB_USER -p < app/database/schema.sql`.
 python run.py
 ```
 
-Visit `http://localhost:5000` for the landing page.
+Visit `http://localhost:5000` to access the application.
 
-If you are not connected yet, `/` will redirect you to `/login`.
+### Authentication Flow
 
-Login flow (DB connection required for data):
+1. Navigate to `http://localhost:5000` – you'll be redirected to `/auth/login`
+2. Click "Sign in with Google" to authenticate via OAuth 2.0
+3. On first login, your account will be auto-created in the database
+4. After successful login, you'll be redirected to `/questions`
+5. Your user info and logout link will appear in the navigation bar
 
-- Go to `/login` and enter DB host, port, user, and password
-  (database name is fixed to `northflow`).
-- On success, you will be redirected to `/questions`.
+### Using the Application
+
+Once authenticated:
+
 - **Manage custom prompts** at `/questions` (add/update/delete via stored
-  procedures with live refresh).
-- **Create and manage check-ins** at `/checkins` – select a user to view
-  their check-ins, create new ones, and record answers to their custom questions.
-  Question-type aware forms handle text, numeric, 1-5 scales, and boolean responses.
-- **View aggregated daily stats** at `/summary`, with optional user and
-  date filters sourced from the `user_daily_summary` view.
+  procedures with live refresh). Each user can create personalized check-in questions.
+- **Create and manage check-ins** at `/checkins` – create new check-ins and
+  record answers to your custom questions. Question-type aware forms handle
+  text, numeric, 1-5 scales, and boolean responses.
+- **View aggregated daily stats** at `/summary`, with optional date
+  filters sourced from the `user_daily_summary` view showing your check-in
+  trends over time.
 
 Health endpoint (requires DB connectivity):
 
@@ -161,14 +197,17 @@ curl http://localhost:5000/health
 # -> {"status": "healthy", "database": "connected"}
 ```
 
-`/health` uses the active session connection if you have already connected via
-`/login`. Otherwise, it falls back to the `.env` database settings.
+`/health` is the only endpoint that doesn't require authentication.
 
 ## Security
 
-NorthFlow includes baseline web application security controls:
+NorthFlow implements comprehensive web application security controls:
 
+- **OAuth 2.0 Authentication**: Third-party authentication via Google (no password storage)
+- **Session Management**: Persistent sessions with 1-hour timeout, secure cookie settings
+- **Protected Routes**: All endpoints except `/health` require authentication via `@login_required`
 - **CSRF Protection**: All forms are protected with Flask-WTF CSRF tokens
+- **Rate Limiting**: 10 requests/minute on sensitive endpoints (create/update/delete)
 - **Input Validation**: Marshmallow schemas validate all user input (length, type, format)
 - **Error Handling**: Errors are logged server-side; generic messages shown to users
 - **HTTP Security Headers**: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, etc.
@@ -192,20 +231,24 @@ See [`.agent/SECURITY_AUDIT.md`](.agent/SECURITY_AUDIT.md) for detailed security
 
 ```text
 app/
-├── __init__.py          # Flask app factory
+├── __init__.py          # Flask app factory with CSRF, rate limiting, OAuth
+├── auth.py              # OAuth configuration and initialization
+├── validators.py        # Marshmallow schemas for input validation
 ├── dal/
 │   ├── __init__.py
 │   ├── database_connection.py  # DatabaseConnection + DatabaseError
 │   ├── user_questions.py       # User questions domain DAL
 │   ├── checkins.py             # Check-in domain DAL (CRUD via stored procedures)
 │   ├── answers.py              # Answer domain DAL (CRUD via stored procedures)
-│   └── summary.py              # Daily summary domain DAL
+│   ├── summary.py              # Daily summary domain DAL
+│   └── oauth_users.py          # OAuth user management DAL
 ├── database/
 │   ├── schema.sql       # MySQL schema with 10+ stored procedures/views
 │   └── setup_schema.py  # Schema application helper
 ├── routes/
 │   ├── __init__.py
-│   └── main.py
+│   ├── auth.py          # OAuth authentication routes
+│   └── main.py          # Protected application routes
 ├── services/
 │   ├── __init__.py
 │   ├── user_questions.py       # Business logic for user questions
@@ -213,18 +256,18 @@ app/
 │   ├── answers.py              # Business logic for answer CRUD
 │   └── summary.py              # Business logic for daily summary
 ├── static/
-│   ├── css/style.css    # Base styles (285 lines, no inline styles)
+│   ├── css/style.css    # Base styles (400+ lines, OAuth styling)
 │   ├── js/main.js       # Placeholder JS hooks
 │   └── images/
 └── templates/
-  ├── base.html        # Layout shell with navigation
-  ├── index.html       # Hero + features copy
-  ├── login.html       # DB connection form
-  ├── questions.html   # user_questions CRUD UI
-  ├── checkins.html    # Check-in list, filter, and create form
-  ├── checkin_detail.html # Check-in detail with dynamic answer forms
-  └── summary.html     # Daily aggregation view with filters
-config.py                # Environment-aware settings
+    ├── base.html        # Layout shell with conditional navigation
+    ├── index.html       # Hero + features copy
+    ├── login.html       # OAuth login page with Google button
+    ├── questions.html   # user_questions CRUD UI
+    ├── checkins.html    # Check-in list, filter, and create form
+    ├── checkin_detail.html # Check-in detail with dynamic answer forms
+    └── summary.html     # Daily aggregation view with filters
+config.py                # Environment-aware settings with OAuth config
 run.py                   # App entry point
 tasks.py                 # Invoke task helpers
 tests/test_connection.py # DAL regression tests

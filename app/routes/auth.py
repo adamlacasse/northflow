@@ -36,7 +36,10 @@ def login_required(f):
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        user_id = session.get("user_id")
+        logger.debug(f"login_required check for {f.__name__}: user_id={user_id}")
         if "user_id" not in session:
+            logger.warning(f"Unauthorized access attempt to {f.__name__}")
             flash("Please log in to access this page.", "warning")
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
@@ -130,6 +133,7 @@ def callback_google():
         update_last_login(db_creds, user_id)
 
         # Store user session info
+        session.permanent = True
         session["user_id"] = user_id
         session["oauth_provider"] = "google"
         session["oauth_id"] = oauth_id
@@ -224,6 +228,7 @@ def callback_github():
         update_last_login(db_creds, user_id)
 
         # Store user session info
+        session.permanent = True
         session["user_id"] = user_id
         session["oauth_provider"] = "github"
         session["oauth_id"] = oauth_id

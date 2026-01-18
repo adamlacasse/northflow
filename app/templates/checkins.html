@@ -6,7 +6,7 @@
         <form method="post"
               action="{{ url_for("main.create_checkin_route") }}"
               class="form-grid">
-            {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>
                 Notes (optional)
                 <textarea name="notes"
@@ -45,7 +45,7 @@
                                     <form method="post"
                                           action="{{ url_for('main.delete_checkin_route', checkin_id=c.id) }}"
                                           class="form-inline">
-                                        {{ csrf_token() }}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit"
                                                 class="btn small danger"
                                                 onclick="return confirm('Delete this check-in and all answers?');">
