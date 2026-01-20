@@ -1,5 +1,9 @@
 # NorthFlow Deployment Documentation
 
+> **Status**: Legacy (Railway). The current AWS CDK deployment guide is in
+> [DEPLOYMENT_AWS_V2.md](DEPLOYMENT_AWS_V2.md). This file is retained for
+> historical reference.
+
 ## Current Deployment Status
 
 NorthFlow is currently deployed to **Railway** with a **MySQL 8.0** database instance.

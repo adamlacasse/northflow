@@ -7,3 +7,7 @@ healthcheckPath = "/health"
 healthcheckTimeout = 120
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
+# Uncomment to run schema initialization on next deploy
+# Then comment it back out or delete run_schema.sh after running once
+# startCommand = "chmod +x run_schema.sh && ./run_schema.sh && python run.py"

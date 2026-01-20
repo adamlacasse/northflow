@@ -6,9 +6,10 @@ This document tracks the transition of NorthFlow from a
 database course project to a production-ready web application. Focus
 areas include security, testing, infrastructure, and best practices.
 
-**Current Deployment**: NorthFlow is already deployed to Railway with
-a MySQL 8.0 database instance. See [DEPLOYMENT.md](DEPLOYMENT.md)
-for current infrastructure details, environment setup, and rollback procedures.
+**Current Deployment (legacy)**: NorthFlow is deployed to Railway with
+a MySQL 8.0 database instance. For the new AWS CDK deployment plan, see
+[DEPLOYMENT_AWS_V2.md](DEPLOYMENT_AWS_V2.md). Legacy Railway notes remain in
+[DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 
