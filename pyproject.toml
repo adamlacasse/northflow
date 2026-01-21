@@ -23,6 +23,7 @@ dependencies = [
     "invoke>=2.2.0",
     "authlib>=1.3.0",
     "requests>=2.31.0",
+    "gunicorn>=21.2.0",
 ]
 
 [project.optional-dependencies]

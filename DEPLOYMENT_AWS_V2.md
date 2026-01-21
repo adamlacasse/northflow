@@ -3,23 +3,28 @@
 Audience: AI coding agents working in this repo.
 Goal: Stand up a production-grade, portfolio-friendly AWS deployment for an existing Python/Flask app using AWS CDK in **TypeScript**.
 
+> **Current stance (Option A):** Deploy in `us-east-1` without a custom domain yet. Use the ALB-generated DNS name for access. Route53/ACM can be added later.
+
 ---
 
 ## 1) Goals
 
 ### Functional
+
 - Deploy the existing **Flask monolith** (templates/static/routes/DAL) as a container.
 - Provision **MySQL** on AWS and apply `app/database/schema.sql` (stored procedures/views included).
 - Serve the app over HTTPS behind a load balancer with a stable domain.
 - Use **Infrastructure as Code** (CDK) for all infra.
 
 ### Operational
+
 - Repeatable deployment: `cdk deploy` builds/uses an image, deploys infra, runs schema task.
 - Secrets are managed in **AWS Secrets Manager**, non-secrets in **SSM Parameter Store**.
 - Logging to **CloudWatch Logs**.
 - Minimal but correct networking/security posture.
 
 ### Portfolio signal
+
 - ECS/Fargate + ALB + RDS + Secrets Manager + Route53/ACM
 - One-off migration task
 - Clear README + architecture doc (this document)
@@ -45,6 +50,7 @@ Goal: Stand up a production-grade, portfolio-friendly AWS deployment for an exis
   -> **RDS MySQL** (private subnet)
 
 Support services:
+
 - **Secrets Manager**: DB creds + Flask secret key + OAuth secret(s)
 - **SSM Parameter Store**: non-secret config
 - **CloudWatch Logs**: app logs + migration task logs
@@ -81,27 +87,32 @@ infra/ # CDK TypeScript project
         app-stack.ts
         outputs.ts
 
-
 ---
 
 ## 5) Application Runtime Model
 
 ### 5.1 Container entrypoints (two “modes”)
+
 The same container image must support:
+
 1) **Web mode**: run gunicorn and serve Flask app
 2) **Migration mode**: apply schema to RDS (run setup script)
 
 This enables repeatable infra deploys without baking DB state into app startup.
 
 ### 5.2 Gunicorn requirement
+
 In production we must not run Flask dev server.
+
 - Use gunicorn (sync workers fine for v1).
 - Health route: `/health` should be fast and not block on slow operations.
 
 ### 5.3 Config surface (env vars)
+
 Standardize config via env vars (read by `config.py`):
 
 Required:
+
 - `FLASK_ENV` (e.g., `production`)
 - `FLASK_SECRET_KEY` (secret)
 - `DB_HOST` / `DB_PORT` / `DB_NAME`
@@ -112,6 +123,7 @@ Required:
   - `OAUTH_REDIRECT_URI` (SSM)
 
 Optional:
+
 - `RATE_LIMIT_*`
 - `CSRF_*` (if needed)
 - Anything else currently in `.env` becomes SSM/Secrets in AWS
@@ -123,40 +135,50 @@ Optional:
 All stacks should be explicit and composable. Prefer 3 stacks.
 
 ### 6.1 NetworkStack
+
 Creates:
+
 - VPC (2 AZ)
 - Public subnets (ALB)
 - Private subnets (ECS tasks + RDS)
 - NAT Gateway (simplest)
 
 Exports/outputs:
+
 - VPC reference
 - Subnet selections
 
 Security posture:
+
 - Nothing public except the ALB.
 
 ### 6.2 DatabaseStack
+
 Creates:
+
 - RDS MySQL instance (private subnet)
 - DB security group (ingress only from ECS SG, defined later)
 - Secrets Manager secret for DB credentials
 - Parameter group (optional but recommended): charset/collation/timezone if needed
 
 Important choices:
+
 - Engine: MySQL (match current app)
 - Instance size: small for cost (t-class)
 - Backups: enable (even minimal) for realism
 - Deletion protection: enabled for “prod”; configurable via context for dev
 
 Exports/outputs:
+
 - `dbEndpointAddress`
 - `dbPort`
 - `dbName`
 - `dbSecretArn`
 
 ### 6.3 AppStack
+
 Creates:
+
 - ECR repository (optional if you’re pushing from CI; else create it)
 - ECS cluster
 - Task definition for web
@@ -166,14 +188,17 @@ Creates:
 - CloudWatch log group for the service
 
 Also creates:
+
 - **Migration Task Definition** (same image, different command)
 
 Security:
+
 - ALB SG: allow 443 from internet
 - ECS SG: allow inbound from ALB SG on container port
 - RDS SG: allow inbound from ECS SG on 3306 (configured in DatabaseStack or wired via cross-stack props)
 
 IAM:
+
 - Task execution role: ECR pull + logs (standard)
 - Task role: read only the specific Secrets/SSM parameters used (principle of least privilege)
 
@@ -182,11 +207,13 @@ IAM:
 ## 7) Domain, TLS, OAuth
 
 ### 7.1 TLS
+
 - Use **ACM certificate** in the same region as the ALB.
 - Use **Route53 hosted zone** for domain (e.g., `adamlacasse.dev`).
 - Add `A/AAAA Alias` record to ALB.
 
 ### 7.2 OAuth redirect
+
 - Once the ALB domain is stable, set Google OAuth redirect URI to:
   `https://<your-domain>/auth/callback` (or whatever route you use)
 
@@ -195,16 +222,21 @@ IAM:
 ## 8) Migration / Schema Application Strategy
 
 ### 8.1 Why
+
 Your schema contains stored procedures/views; migrations must be repeatable and explicit.
 
 ### 8.2 How
+
 Run a one-off ECS task:
+
 - Command: `deploy/migrate.sh`
 - Script runs `python app/database/setup_schema.py` (or module form)
 - Script pulls connection params from env vars and secrets
 
 ### 8.3 When
+
 Deployment workflow (manual or CI step):
+
 1) `cdk deploy NetworkStack DatabaseStack AppStack`
 2) Trigger migration task once the DB is reachable:
    - via AWS CLI `ecs run-task` using the migration task definition
@@ -218,29 +250,46 @@ Deployment workflow (manual or CI step):
 ## 9) Build & Deploy Workflow
 
 ### 9.1 Local prerequisites
+
 - AWS CLI configured
 - Node 18+ (or 20+)
 - Docker
 - CDK installed (or use `npx cdk`)
 
 ### 9.2 CDK bootstrap
+
 From `infra/`:
+
 - `npm install`
 - `npx cdk bootstrap`
 
 ### 9.3 Image build/push options
+
 Pick one (agents implement whichever is easier):
 
 Option A (recommended): CI builds/pushes to ECR; CDK references image tag.
 Option B: local build/push script.
 
 Required outputs:
+
 - Image in ECR with a tag (e.g., git SHA)
 
+CDK context knobs (examples):
+
+- `-c imageSource=local` builds from `deploy/` at deploy time (requires Docker available during `cdk deploy`).
+- `-c imageTag=<tag>` selects a pushed ECR tag (default `latest`).
+- `-c certificateArn=<arn>` enables HTTPS listener + HTTP->HTTPS redirect on the ALB.
+- `-c flaskSecretArn=<arn>` reuse an existing Flask secret instead of generating one.
+- `-c googleClientIdParamName=<ssm-path>` / `-c githubClientIdParamName=<ssm-path>` inject OAuth client IDs from SSM.
+- `-c googleClientSecretArn=<arn>` / `-c githubClientSecretArn=<arn>` inject OAuth secrets from Secrets Manager.
+- `-c oauthRedirectUriParamName=<ssm-path>` set `OAUTH_REDIRECT_URI` from SSM.
+
 ### 9.4 Deploy
+
 - `npx cdk deploy --all`
 
 ### 9.5 Run migrations
+
 - `aws ecs run-task ...` (see Runbook section)
 
 ---
@@ -248,18 +297,21 @@ Required outputs:
 ## 10) Configuration Sources (SSM & Secrets)
 
 ### 10.1 Secrets Manager (examples)
+
 - `/northflow/prod/db`:
   - username, password (generated or provided)
 - `/northflow/prod/flask_secret_key`
 - `/northflow/prod/oauth_client_secret`
 
 ### 10.2 SSM Parameter Store (examples)
+
 - `/northflow/prod/flask_env` = `production`
 - `/northflow/prod/db_name` = `northflow`
 - `/northflow/prod/oauth_client_id` = `...`
 - `/northflow/prod/oauth_redirect_uri` = `https://.../auth/callback`
 
 ECS task definition must inject:
+
 - environment values from SSM (plain text)
 - secrets from Secrets Manager
 
@@ -268,10 +320,12 @@ ECS task definition must inject:
 ## 11) Logging & Observability
 
 ### v1 requirements
+
 - ECS container logs to CloudWatch Logs (`awslogs` driver)
 - Separate log group for migrate task
 
 ### Nice-to-have (later)
+
 - ALB access logs to S3
 - CloudWatch alarms: 5xx spike, target unhealthy, CPU/mem
 
@@ -292,10 +346,12 @@ ECS task definition must inject:
 ## 13) Cost Controls
 
 Be aware:
+
 - NAT Gateway costs can dominate small projects.
 - RDS costs are steady.
 
 Controls:
+
 - Use small RDS instance class
 - Single NAT (default CDK may create 1 per AZ; configure to 1 if desired)
 - Turn off deletion protection in dev
@@ -306,24 +362,29 @@ Controls:
 ## 14) Runbook (Operator Steps)
 
 ### 14.1 Validate deployment
+
 - Open `https://<domain>/health`
 - Ensure ALB target is healthy
 - Check CloudWatch Logs for startup errors
 
 ### 14.2 Run migrations (example approach)
+
 Goal: run the migration task definition created by CDK.
 
 Steps:
+
 1) Find cluster name + task definition ARN (from CDK outputs)
 2) Run:
    - `aws ecs run-task --cluster <cluster> --task-definition <migrateTaskDefArn> --launch-type FARGATE --network-configuration ...`
 
 Network configuration must use:
+
 - private subnets
 - ECS security group
 - assignPublicIp: DISABLED (recommended)
 
 ### 14.3 Common failure modes
+
 - Tasks can’t reach DB: security group wiring or subnet selection
 - Health check failing: wrong port, wrong path, gunicorn not binding `0.0.0.0`
 - OAuth redirect mismatch: update Google console and/or env var
@@ -333,6 +394,7 @@ Network configuration must use:
 ## 15) Implementation Checklist (for agents)
 
 ### App/container changes
+
 - [ ] Add gunicorn dependency
 - [ ] Create `deploy/Dockerfile`
 - [ ] Create `deploy/entrypoint.sh` (web)
@@ -341,6 +403,7 @@ Network configuration must use:
 - [ ] Ensure `/health` exists and returns 200 reliably
 
 ### CDK (TypeScript)
+
 - [ ] `infra/` CDK project scaffold
 - [ ] `NetworkStack` implemented
 - [ ] `DatabaseStack` implemented
@@ -352,11 +415,13 @@ Network configuration must use:
   - [ ] Migration task definition
 
 ### DNS/TLS
+
 - [ ] Route53 HostedZone lookup
 - [ ] ACM cert (DNS validated)
 - [ ] Route53 alias record to ALB
 
 ### Docs
+
 - [ ] README includes deploy steps and migration step
 - [ ] This architecture doc kept up to date
 

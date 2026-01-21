@@ -1,0 +1,23 @@
+{
+    "cSpell.words": [
+      "amazonlinux",
+      "Authlib",
+      "certbot",
+      "clickjacking",
+      "djlint",
+      "gunicorn",
+      "HTTPONLY",
+      "mypy",
+      "mysqldump",
+      "nosniff",
+      "procs",
+      "pymarkdown",
+      "pymarkdownlnt",
+      "sqlfluff",
+      "userinfo"
+    ],
+  "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.indexing": false,
+  "python.analysis.completeFunctionParens": false
+}

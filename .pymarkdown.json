@@ -5,6 +5,9 @@
     },
     "md026": {
       "punctuation": ".,;:!?"
+    },
+    "md036": {
+      "enabled": false
     }
   },
   "extensions": {
