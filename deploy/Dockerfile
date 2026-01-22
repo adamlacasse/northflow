@@ -18,8 +18,11 @@ COPY app /app/app
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
-# Copy remaining code (templates/static)
-COPY . /app
+# Copy runtime config and deployment scripts
+COPY config.py /app/
+COPY deploy /app/deploy
+RUN sed -i 's/\r$//' /app/deploy/entrypoint.sh /app/deploy/migrate.sh \
+    && chmod +x /app/deploy/entrypoint.sh /app/deploy/migrate.sh
 
 EXPOSE 8000
 

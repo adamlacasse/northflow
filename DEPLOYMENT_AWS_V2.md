@@ -288,7 +288,28 @@ CDK context knobs (examples):
 
 - `npx cdk deploy --all`
 
-### 9.5 Run migrations
+### 9.5 First deploy cheat sheet (CLI)
+
+Use the CDK outputs to avoid guessing subnet/SG IDs. The network stack now outputs `PrivateSubnetIds`, `PublicSubnetIds`, and security group IDs.
+
+1) From `infra/`: `npm install && npx cdk bootstrap`
+2) Deploy with local image build (fastest for first run):  
+   `npx cdk deploy --all -c stage=prod -c imageSource=local [-c cpuArch=arm64|x86_64] [-c certificateArn=...] [-c googleClientIdParamName=...] [-c googleClientSecretArn=...] [-c oauthRedirectUriParamName=...]`
+   - If you see `exec /bin/sh: exec format error`, your image CPU architecture doesn’t match the Fargate task. Set `-c cpuArch=arm64` (Apple Silicon) or `-c cpuArch=x86_64`.
+3) If pushing to ECR instead of local build:  
+   - Deploy once to create the repo: `npx cdk deploy northflow-prod-network northflow-prod-database northflow-prod-app -c imageSource=ecr`  
+   - Login/tag/push:  
+
+     ```bash
+     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
+     docker build -t northflow:latest deploy/
+     docker tag northflow:latest <account>.dkr.ecr.us-east-1.amazonaws.com/northflow:latest
+     docker push <account>.dkr.ecr.us-east-1.amazonaws.com/northflow:latest
+     ```
+
+   - Redeploy App stack to pick tag (if changed): `npx cdk deploy northflow-prod-app -c imageSource=ecr -c imageTag=latest`
+
+### 9.6 Run migrations
 
 - `aws ecs run-task ...` (see Runbook section)
 
@@ -374,8 +395,18 @@ Goal: run the migration task definition created by CDK.
 Steps:
 
 1) Find cluster name + task definition ARN (from CDK outputs)
-2) Run:
-   - `aws ecs run-task --cluster <cluster> --task-definition <migrateTaskDefArn> --launch-type FARGATE --network-configuration ...`
+2) Use the network outputs (`PrivateSubnetIds`, `EcsSecurityGroupId`) and run:
+
+   ```bash
+   PRIVATE_SUBNETS=$(aws cloudformation describe-stacks --stack-name northflow-prod-network \
+     --query "Stacks[0].Outputs[?OutputKey=='PrivateSubnetIds'].OutputValue" --output text)
+
+   aws ecs run-task \
+     --cluster <ClusterName> \
+     --task-definition <MigrateTaskDefArn> \
+     --launch-type FARGATE \
+     --network-configuration "awsvpcConfiguration={subnets=[${PRIVATE_SUBNETS//,/}],securityGroups=[<EcsSecurityGroupId>],assignPublicIp=DISABLED}"
+   ```
 
 Network configuration must use:
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
+import { CpuArchitecture } from "aws-cdk-lib/aws-ecs";
 import { NetworkStack } from "../lib/network-stack";
 import { DatabaseStack } from "../lib/database-stack";
 import { AppStack } from "../lib/app-stack";
@@ -41,6 +42,16 @@ const githubClientSecretArn = app.node.tryGetContext("githubClientSecretArn");
 const oauthRedirectUriParamName = app.node.tryGetContext("oauthRedirectUriParamName");
 const flaskSecretArn = app.node.tryGetContext("flaskSecretArn");
 
+const cpuArchContext = (app.node.tryGetContext("cpuArch") as string | undefined)?.toLowerCase();
+const cpuArchitecture =
+  cpuArchContext === "arm64"
+    ? CpuArchitecture.ARM64
+    : cpuArchContext === "x86_64" || cpuArchContext === "amd64"
+      ? CpuArchitecture.X86_64
+      : process.arch === "arm64"
+        ? CpuArchitecture.ARM64
+        : CpuArchitecture.X86_64;
+
 new AppStack(app, `${cfg.appName}-${stage}-app`, {
   env,
   description: `${cfg.appName} app (${stage})`,
@@ -56,6 +67,7 @@ new AppStack(app, `${cfg.appName}-${stage}-app`, {
   containerPort: 8000,
   appName: cfg.appName,
   dbName: cfg.dbName,
+  cpuArchitecture,
   certificateArn,
   googleClientIdParamName,
   googleClientSecretArn,

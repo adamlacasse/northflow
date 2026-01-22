@@ -16,6 +16,7 @@
       "sqlfluff",
       "userinfo"
     ],
+  "search.useIgnoreFiles": false,
   "python.languageServer": "Pylance",
   "python.analysis.typeCheckingMode": "off",
   "python.analysis.indexing": false,
