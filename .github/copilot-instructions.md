@@ -1,13 +1,13 @@
 # NorthFlow - AI Coding Agent Instructions
 
 ## Project Overview
-NorthFlow is a Flask-based mindfulness/gratitude check-in app built as the first MVP for a CSC-6302 Database Principles course project. The project emphasizes a clean DAL pattern, multi-dialect linting, and environment-based configuration. The UI is intentionally minimal—focus is on database interaction, error handling, and deployment readiness. See `.agent/AGENT_CONTEXT.md` for the course rubric and deliverable constraints.
 
-Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVANCED_FEATURE.md).
+NorthFlow is a Flask-based mindfulness/gratitude check-in app built as the first MVP for a CSC-6302 Database Principles course project. The project emphasizes a clean DAL pattern, multi-dialect linting, and environment-based configuration.
 
 ## Architecture & Key Components
 
 ### Application Factory Pattern
+
 - Entry point: `run.py` → `create_app(config_name)` in `app/__init__.py`
 - Config determined by `FLASK_ENV` environment variable (defaults to `development`)
 - Configs defined in `config.py`: `DevelopmentConfig`, `TestingConfig`, `ProductionConfig`
@@ -15,6 +15,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - App factory initializes CSRF protection, rate limiting, OAuth, and security headers
 
 ### Authentication & Authorization (`app/routes/auth.py` + `app/auth.py`)
+
 - **OAuth 2.0**: Third-party authentication via Google (uses `authlib`)
 - **No password storage**: Users authenticate through Google OAuth
 - **Auto-registration**: New users are automatically created on first login
@@ -24,6 +25,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - **DAL**: `app/dal/oauth_users.py` handles OAuth user CRUD (get by OAuth ID, get by email, create user, update last login)
 
 ### Database Layer (`app/dal/database_connection.py`)
+
 - **`DatabaseConnection`**: Primary DAL class wrapping `mysql-connector-python`
   - Always returns dictionary cursors for consistent JSON-like results
   - Methods: `execute_query()`, `call_procedure()`, `commit()`, `close()`
@@ -33,6 +35,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - **Stored procedures**: Use `call_procedure(proc_name, params)` for CRUD operations defined in `schema.sql`
 
 ### Database Schema (`app/database/schema.sql`)
+
 - Five main tables: `users` (with OAuth fields), `user_questions`, `checkins`, `answers`, `oauth_users`
 - **User table fields**: `id`, `email` (UNIQUE), `first_name`, `last_name`, `oauth_provider`, `oauth_id`, `created_at`, `last_login`
 - Includes stored procedures for `user_questions` CRUD (`add_user_question`, `update_user_question`, `delete_user_question`)
@@ -40,6 +43,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - Initialize with: `invoke execute-schema` (runs `app/database/setup_schema.py`)
 
 ### Routing
+
 - **Authentication blueprint** (`app/routes/auth.py`):
   - `GET /auth/login`: Show OAuth login page with Google button
   - `GET /auth/login/google`: Redirect to Google OAuth
@@ -63,7 +67,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
   - `GET /summary`: Reads aggregated rows from `user_daily_summary` view (filtered to current user)
   - `GET /health`: Returns JSON health status (200/503, no auth required)
 
-- **Import pattern**: 
+- **Import pattern**:
   - From auth: `from app.routes.auth import login_required`
   - From DAL: `from app.dal import DatabaseConnection, DatabaseError`
   - OAuth DAL: `from app.dal.oauth_users import create_oauth_user, get_user_by_oauth, etc.`
@@ -71,12 +75,14 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 ## Developer Workflows
 
 ### Environment Setup
+
 1. Create `.env` file with: `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `SECRET_KEY`, `FLASK_ENV`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 2. `pip install -r requirements.txt` (installs package + dev tools from `pyproject.toml`)
 3. `invoke execute-schema` to create database and tables
 4. Register app with Google Cloud Console to get OAuth credentials
 
 ### Running the App
+
 - `python run.py` → serves on `0.0.0.0:5000`
 - Navigate to `http://localhost:5000` → redirects to `/auth/login`
 - Click "Sign in with Google" to authenticate
@@ -84,6 +90,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - Test health: `curl http://localhost:5000/health` (no auth required)
 
 ### Linting (Critical Workflow)
+
 - **Multi-dialect linting**: Python (Ruff), SQL (SQLFluff), HTML/Jinja2 (djlint)
 - `invoke lint` → runs all three with auto-fix
 - Granular: `invoke lint-python`, `invoke lint-sql`, `invoke lint-html`
@@ -91,6 +98,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - Ruff config in `pyproject.toml`: line-length 88, Python 3.8+
 
 ### Testing
+
 - Run: `pytest tests/` (requires active DB connection per `.env`)
 - Tests use module-scoped `db_connection` fixture for efficiency
 - Test pattern: Load `.env` explicitly via `load_dotenv()` in test file
@@ -99,21 +107,25 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 ## Project-Specific Conventions
 
 ### Import Organization
+
 - Config imports: `from config import Config, config` (note: lowercase `config` dict)
 - DAL imports: `from app.dal import DatabaseConnection, DatabaseError`
 - Package structure exports in `__init__.py` files (see `app/dal/__init__.py`)
 
 ### Error Handling
+
 - Always wrap DB operations in try/except and raise `DatabaseError` with context
 - Log errors before raising: `logging.error(f"Query failed with error: {e}")`
 - Health endpoint demonstrates error handling pattern returning 503 on DB failure
 
 ### Configuration Pattern
+
 - All configs inherit from base `Config` class
 - Environment vars loaded via `python-dotenv` at module level in `config.py`
 - Access config in app via: `app.config.from_object(config[config_name])`
 
 ### SQL & Database
+
 - MySQL 8.0+ dialect required for SQLFluff
 - Use stored procedures for CRUD on `user_questions`
 - Read-only/lookup queries (e.g., listing users and reading the summary view) may use parameterized SELECTs via the DAL
@@ -121,6 +133,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - Foreign keys use `ON DELETE CASCADE` consistently
 
 ## Key Files Reference
+
 - **DAL patterns**: `app/dal/database_connection.py` (DatabaseConnection class)
 - **Blueprint registration**: `app/__init__.py` (create_app factory)
 - **Health check example**: `app/routes/main.py` (/health endpoint)
@@ -129,12 +142,15 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - **Schema with seed data**: `app/database/schema.sql` (includes stored procs)
 
 ## Documentation scope
+
 - README is human-facing and should track the current state of the application so others can run it locally; avoid embedding todos or historical notes there.
 
 ## Extended Context
-- **`.agent` folder**: Contains larger application context and documentation that continues to be iterated on
+
+- **`docs` folder**: Contains larger application context and documentation that continues to be iterated on
 
 ## DO NOTs
+
 - Don't bypass `DatabaseConnection` class for direct mysql-connector usage
 - Don't create environment-specific databases (all envs use `northflow`)
 - Don't skip linting—this project enforces Python, SQL, AND HTML linting
@@ -142,3 +158,7 @@ Advanced feature planning is documented in [ADVANCED_FEATURE.md](../.agent/ADVAN
 - Don't write SQL directly in routes; use DAL methods or stored procedures
 - Don't use `{{ csrf_token() }}` alone in templates; always wrap in hidden input: `<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">`
 - Don't forget to mark sessions as persistent in OAuth callbacks: `session.permanent = True`
+
+## Deployment
+
+*“Authoritative deployment documentation lives in `docs/DEPLOYMENT_ACTIVE.md`.”*

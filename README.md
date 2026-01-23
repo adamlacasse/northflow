@@ -94,7 +94,7 @@ cd northflow
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-pip install -r requirements.txt          # installs app plus tooling extras
+pip install --upgrade pip && pip install -r requirements.txt          # installs app plus tooling extras
 ```
 
 ### Configuration
@@ -202,35 +202,14 @@ curl http://localhost:5000/health
 ## Deployment (AWS CDK)
 
 The AWS CDK (TypeScript) deployment approach is documented in
-[DEPLOYMENT_AWS_V2.md](DEPLOYMENT_AWS_V2.md). This guide replaces earlier
-deployment notes and provides the end-to-end CDK workflow, infrastructure
-layout, and migration steps.
-
-## AWS Deployment (CDK)
-
-NorthFlow deploys to AWS using **AWS CDK (TypeScript)** with:
-
-- **ECS Fargate** for the Flask container
-- **Application Load Balancer (ALB)** for HTTPS ingress + health checks
-- **RDS MySQL** in private subnets
-- **Secrets Manager** for secrets (DB creds, Flask secret key, OAuth secrets)
-- **SSM Parameter Store** for non-secret config
-- **CloudWatch Logs** for application and migration logs
+[docs/DEPLOYMENT_ACTIVE.md](docs/DEPLOYMENT_ACTIVE.md) with step-by-step
+instructions.
 
 ### Prerequisites
 
 - AWS CLI configured (`aws sts get-caller-identity` works)
 - Node 18+ / npm
 - Docker
-- A Route53 hosted zone for your domain (optional until you add HTTPS + custom domain)
-
-### One-time setup
-
-```bash
-cd infra
-npm install
-npx cdk bootstrap
-```
 
 ## Security
 
@@ -247,8 +226,6 @@ NorthFlow implements comprehensive web application security controls:
 - **Secure Sessions**: HTTPOnly, SameSite, and Secure cookie flags enabled
 - **Secure Configuration**: `SECRET_KEY` required from environment (no defaults)
 - **SQL Parameterization**: All database queries use prepared statements
-
-See [`.agent/SECURITY_AUDIT.md`](.agent/SECURITY_AUDIT.md) for detailed security audit findings and implementation status.
 
 ## Tooling & Quality Gates
 

@@ -1,8 +1,14 @@
 #!/bin/sh
 set -e
 
-# Apply database schema using the same image in a one-off ECS task
-MODE=${MIGRATE_MODE:-schema}
+# Database migrations / schema application.
+#
+# IMPORTANT:
+# - "schema" is DESTRUCTIVE (schema.sql contains DROP DATABASE) and is intended
+#   for one-time bootstrap only.
+# - "objects" is SAFE and repeatable (procedures/views/functions), and should
+#   run on every deploy to prevent "missing routine" race conditions.
+MODE=${MIGRATE_MODE:-objects}
 
 if [ "$MODE" = "schema" ]; then
   python -m app.database.setup_schema
