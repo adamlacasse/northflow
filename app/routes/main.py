@@ -392,11 +392,14 @@ def delete_answer_route(checkin_id: int, question_id: int):
 
 @bp.route("/health")
 def health():
+    db = None
     try:
         db = DatabaseConnection()
         db.call_procedure("health_check")
-        db.close()
         return {"status": "healthy", "database": "connected"}, 200
     except DatabaseError as e:
         logger.error(f"Health check failed: {e}", exc_info=True)
         return {"status": "unhealthy", "error": "Database connection failed"}, 503
+    finally:
+        if db:
+            db.close()

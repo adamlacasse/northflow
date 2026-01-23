@@ -35,6 +35,7 @@ type ImageSource = "ecr" | "local";
 const imageSource: ImageSource = (app.node.tryGetContext("imageSource") as ImageSource) || "ecr";
 const imageTag = app.node.tryGetContext("imageTag") || "latest";
 const certificateArn = app.node.tryGetContext("certificateArn");
+const existingEcrRepoName = app.node.tryGetContext("existingEcrRepoName");
 const googleClientIdParamName = app.node.tryGetContext("googleClientIdParamName");
 const googleClientSecretArn = app.node.tryGetContext("googleClientSecretArn");
 const githubClientIdParamName = app.node.tryGetContext("githubClientIdParamName");
@@ -69,6 +70,7 @@ new AppStack(app, `${cfg.appName}-${stage}-app`, {
   dbName: cfg.dbName,
   cpuArchitecture,
   certificateArn,
+  existingEcrRepoName,
   googleClientIdParamName,
   googleClientSecretArn,
   githubClientIdParamName,
