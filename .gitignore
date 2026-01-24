@@ -214,6 +214,7 @@ infra/*.js
 infra/*.d.ts
 infra/.cdk.staging/
 infra/cdk.context.json
+infra/text/
 
 # AWS / Deployment
 .aws/
@@ -228,3 +229,5 @@ infra/cdk.context.json
 # Docker
 .dockerignore.bak
 docker-compose.override.yml
+
+

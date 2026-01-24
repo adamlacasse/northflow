@@ -1,0 +1,27 @@
+{
+  "DocumentName": "AWS-RunShellScript",
+  "InstanceIds": ["i-09ae2f0d565a98621"],
+  "Parameters": {
+    "commands": [
+      "export AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1",
+      "set -euxo pipefail",
+      "sudo yum install -y docker unzip",
+      "sudo systemctl enable docker",
+      "sudo systemctl start docker",
+      "cd /home/ec2-user",
+      "rm -rf app-src app.zip || true",
+      "aws s3 cp s3://cdk-hnb659fds-assets-523180269986-us-east-1/724f4fae77b50f1383ce6dd71dae89ab0a6bd4ed3b48520e02b4cba66c802fd8.zip /home/ec2-user/app.zip",
+      "mkdir -p app-src",
+      "unzip -q /home/ec2-user/app.zip -d /home/ec2-user/app-src",
+      "cd /home/ec2-user/app-src",
+      "sudo docker build -t northflow:latest -f deploy/Dockerfile .",
+      "DB_SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id arn:aws:secretsmanager:us-east-1:523180269986:secret:DbCredentials798065DE-3hWEhASODaiu-g1KKcJ --query SecretString --output text)",
+      "DB_USER=$(echo \"$DB_SECRET_JSON\" | sed -n 's/.*\\\"username\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p')",
+      "DB_PASSWORD=$(echo \"$DB_SECRET_JSON\" | sed -n 's/.*\\\"password\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p')",
+      "FLASK_SECRET=$(aws secretsmanager get-secret-value --secret-id arn:aws:secretsmanager:us-east-1:523180269986:secret:FlaskSecretDB73E49F-BolLAxSBwenS-nu5YVv --query SecretString --output text)",
+      "sudo docker run --rm --env DB_HOST=northflow-prod-database-mysqlinstance2cfb48f1-gtf9zfuoqq6l.co98ucik0bye.us-east-1.rds.amazonaws.com --env DB_PORT=3306 --env DB_NAME=northflow --env DB_USER=\"$DB_USER\" --env DB_PASSWORD=\"$DB_PASSWORD\" --env SECRET_KEY=\"$FLASK_SECRET\" --env MIGRATE_MODE=schema northflow:latest migrate",
+      "sudo docker run --rm --env DB_HOST=northflow-prod-database-mysqlinstance2cfb48f1-gtf9zfuoqq6l.co98ucik0bye.us-east-1.rds.amazonaws.com --env DB_PORT=3306 --env DB_NAME=northflow --env DB_USER=\"$DB_USER\" --env DB_PASSWORD=\"$DB_PASSWORD\" --env SECRET_KEY=\"$FLASK_SECRET\" --env MIGRATE_MODE=objects northflow:latest migrate",
+      "sudo docker run -d --restart unless-stopped --name northflow -p 80:8000 --env FLASK_ENV=production --env DB_HOST=northflow-prod-database-mysqlinstance2cfb48f1-gtf9zfuoqq6l.co98ucik0bye.us-east-1.rds.amazonaws.com --env DB_PORT=3306 --env DB_NAME=northflow --env DB_USER=\"$DB_USER\" --env DB_PASSWORD=\"$DB_PASSWORD\" --env SECRET_KEY=\"$FLASK_SECRET\" northflow:latest"
+    ]
+  }
+}

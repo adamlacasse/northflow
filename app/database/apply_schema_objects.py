@@ -3,7 +3,7 @@ import re
 from typing import List, Tuple
 
 from app.dal.database_connection import DatabaseConnection, DatabaseError
-from app.database.schema_utils import parse_schema_sql_with_delimiters
+from app.database.schema_utils import parse_schema_statements
 
 _SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
 
@@ -50,12 +50,13 @@ def _drop_statement(obj_type: str, obj_name: str) -> str:
 def main() -> None:
     """Apply repeatable schema objects (views/procedures/functions) from schema.sql."""
     try:
-        db = DatabaseConnection()
+        # allow_raw_sql ensures we can run DDL directly for objects
+        db = DatabaseConnection(allow_raw_sql=True)
 
         with open(_SCHEMA_PATH, "r", encoding="utf-8") as f:
-            sql_text = f.read()
+            f.read()
 
-        statements = parse_schema_sql_with_delimiters(sql_text)
+        statements = parse_schema_statements(_SCHEMA_PATH)
         objects = _extract_objects(statements)
 
         if not objects:
@@ -65,12 +66,13 @@ def main() -> None:
         # Drop then create each object deterministically.
         for obj_type, obj_name, create_sql in objects:
             drop_sql = _drop_statement(obj_type, obj_name)
-            db.execute(drop_sql)
-            db.execute(create_sql)
+            db.cursor.execute(drop_sql)
+            db.cursor.execute(create_sql)
 
         db.commit()
         print(f"Applied {len(objects)} schema objects successfully.")
     except (DatabaseError, OSError, ValueError):
+        print("Error applying schema objects:")
         raise
     finally:
         try:
