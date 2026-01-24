@@ -3,11 +3,13 @@
 A mindfulness/gratitude check-in app, created as the final project for
 CSC-6302 Database Principles
 
+> **Note for AI agents:** See [TODO.md](TODO.md) for open questions and code/doc alignment tasks.
+
 ## Overview
 
 NorthFlow currently provides:
 
-- **OAuth 2.0 Authentication**: Secure login with Google OAuth (no password storage)
+- **OAuth 2.0 Authentication**: Secure login with Google and GitHub OAuth (no password storage)
 - A Flask app factory (`app/__init__.py`) that wires configuration,
   routes, and assets with CSRF protection, rate limiting, and security headers.
 - A `DatabaseConnection` helper (`app/dal/database_connection.py`) that wraps
@@ -42,26 +44,32 @@ This feature demonstrates meaningful data summarization beyond basic CRUD operat
   `python-dotenv` and defines `DevelopmentConfig`, `TestingConfig`, and
   `ProductionConfig` classes. All rely on the `northflow` database by
   default.
-- **Authentication**: OAuth 2.0 with Google (via `authlib`). Users auto-register
-  on first login. Sessions are persistent with 1-hour timeout. All routes except
-  `/health` require authentication via `@login_required` decorator.
+- **Authentication**: OAuth 2.0 with Google and GitHub (via `authlib`). Users auto-register
+  on first login. Sessions are permanent with 1-hour timeout. All app routes except
+  `/auth/*` and `/health` require authentication via `@login_required`.
 - **Blueprints**:
   - **`app/routes/auth.py`** exposes:
-    - `GET /auth/login` – OAuth login page with Google sign-in button
+    - `GET /auth/login` – OAuth login page with Google/GitHub sign-in buttons
     - `GET /auth/login/google` – Redirect to Google OAuth
     - `GET /auth/callback/google` – Handle Google OAuth callback (auto-register or login)
+    - `GET /auth/login/github` – Redirect to GitHub OAuth
+    - `GET /auth/callback/github` – Handle GitHub OAuth callback (auto-register or login)
     - `GET /auth/logout` – Clear session and log out
-  - **`app/routes/main.py`** exposes (all protected by `@login_required`):
+  - **`app/routes/main.py`** exposes (all protected by `@login_required` unless noted):
     - `GET /` – Redirects to questions page
     - `GET /questions` – Manage your custom check-in questions (CRUD via stored procedures)
-    - `GET /checkins` – View and filter your historical check-ins
-    - `POST /checkins/create` – Create a new check-in session
+    - `POST /questions/new` – Create a new question
+    - `POST /questions/<id>/edit` – Update a question
+    - `POST /questions/<id>/delete` – Delete a question
+    - `GET /checkins` – View your historical check-ins
+    - `GET /checkins/new` – New check-in form
+    - `POST /checkins/new` – Create a new check-in session
     - `GET /checkins/<id>` – Answer your custom questions for a check-in
-    - `POST /checkins/<id>/update` – Update check-in notes
-    - `GET /summary` – View aggregated daily statistics (mood, scores, trends)
+    - `POST /checkins/<id>/edit` – Update check-in notes
     - `POST /checkins/<id>/delete` – Delete check-in and all answers
-    - `POST /checkins/<id>/answers/<question_id>/save` – Save/update answer
+    - `POST /checkins/<id>/answers/<question_id>` – Save/update answer
     - `POST /checkins/<id>/answers/<question_id>/delete` – Remove answer
+    - `GET /summary` – View aggregated daily statistics (mood, scores, trends)
     - `GET /health` – DB connectivity check (returns JSON 200/503, no auth required)
 - **Templates & static assets**: `app/templates` plus `app/static/{css,
   js,images}` provide the UI shell; styles and scripts are deliberately
@@ -94,13 +102,15 @@ cd northflow
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-pip install -r requirements.txt          # installs app plus tooling extras
+pip install --upgrade pip && pip install -r requirements.txt          # installs app plus tooling extras
 ```
 
 ### Configuration
 
 Create a `.env` file in the project root (It will be loaded automatically
 by `config.py`):
+
+`SECRET_KEY` is required at import time; the app will fail to start if it is missing.
 
 ```env
 # Database Configuration
@@ -116,6 +126,10 @@ SECRET_KEY=your-secure-random-key
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
+# OAuth Configuration (GitHub)
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+
 # Environment
 FLASK_ENV=development
 ```
@@ -128,7 +142,7 @@ FLASK_ENV=development
   python3 -c 'import secrets; print(secrets.token_hex(32))'
   ```
 
-- For OAuth to work, you must register your app with Google Cloud Console and add the credentials above.
+- For OAuth to work, register your app with the provider(s) you intend to use (Google/GitHub) and add the credentials above.
 
 ### Google OAuth Setup
 
@@ -139,6 +153,14 @@ FLASK_ENV=development
 5. Choose "Web application"
 6. Add authorized redirect URI: `http://localhost:5000/auth/callback/google` (development)
 7. Copy the Client ID and Client Secret to your `.env` file
+
+### GitHub OAuth Setup
+
+1. Go to GitHub Settings -> Developer settings -> OAuth Apps
+2. Click "New OAuth App"
+3. Set "Homepage URL" to `http://localhost:5000` (development)
+4. Set "Authorization callback URL" to `http://localhost:5000/auth/callback/github`
+5. Copy the Client ID and Client Secret to your `.env` file
 
 The app will fail to start if `SECRET_KEY` is not set in the environment.
 
@@ -153,13 +175,15 @@ invoke execute-schema
 
 The command runs `app/database/setup_schema.py`, creating the
 `northflow` database plus the `users`, `user_questions`, `checkins`, and
-`answers` tables. If you prefer to run the SQL manually, you can still
-execute `mysql -u $DB_USER -p < app/database/schema.sql`.
+`answers` tables. Note that `schema.sql` drops and recreates the database,
+so do not run this against an existing environment. If you prefer to run
+the SQL manually, you can still execute
+`mysql -u $DB_USER -p < app/database/schema.sql`.
 
 ### Stored Routines
 
-`schema.sql` includes stored procedures for adding/updating/deleting
-`user_questions` to demonstrate CRUD patterns in MySQL.
+`schema.sql` includes stored procedures for user questions, check-ins, answers,
+daily summary reporting, plus the `health_check` routine.
 
 ## Running the App
 
@@ -172,7 +196,7 @@ Visit `http://localhost:5000` to access the application.
 ### Authentication Flow
 
 1. Navigate to `http://localhost:5000` – you'll be redirected to `/auth/login`
-2. Click "Sign in with Google" to authenticate via OAuth 2.0
+2. Click "Sign in with Google" or "Sign in with GitHub" to authenticate via OAuth 2.0
 3. On first login, your account will be auto-created in the database
 4. After successful login, you'll be redirected to `/questions`
 5. Your user info and logout link will appear in the navigation bar
@@ -184,28 +208,42 @@ Once authenticated:
 - **Manage custom prompts** at `/questions` (add/update/delete via stored
   procedures with live refresh). Each user can create personalized check-in questions.
 - **Create and manage check-ins** at `/checkins` – create new check-ins and
-  record answers to your custom questions. Question-type aware forms handle
-  text, numeric, 1-5 scales, and boolean responses.
+  record answers to your custom questions. Check-ins capture notes; timestamps
+  are set by the database. Question-type aware forms handle text, numeric,
+  1-5 scales, and boolean responses.
 - **View aggregated daily stats** at `/summary`, with optional date
   filters sourced from the `user_daily_summary` view showing your check-in
   trends over time.
 
-Health endpoint (requires DB connectivity):
+Health endpoint (requires DB connectivity and applied routines):
 
 ```bash
 curl http://localhost:5000/health
-# -> {"status": "healthy", "database": "connected"}
+# -> 200 when DB is reachable and health_check exists
+# -> 503 when DB is unreachable or health_check is missing
 ```
 
-`/health` is the only endpoint that doesn't require authentication.
+`/auth/*` and `/health` are the only endpoints that don't require authentication.
+
+## Deployment (AWS CDK)
+
+NorthFlow deployment is **AWS-only** via CDK. See
+[docs/DEPLOYMENT_ACTIVE.md](docs/DEPLOYMENT_ACTIVE.md) for the target architecture and
+migration contract. CDK provisioning is currently a work in progress.
+
+### Prerequisites
+
+- AWS CLI configured (`aws sts get-caller-identity` works)
+- Node 18+ / npm
+- Docker
 
 ## Security
 
 NorthFlow implements comprehensive web application security controls:
 
-- **OAuth 2.0 Authentication**: Third-party authentication via Google (no password storage)
+- **OAuth 2.0 Authentication**: Third-party authentication via Google and GitHub (no password storage)
 - **Session Management**: Persistent sessions with 1-hour timeout, secure cookie settings
-- **Protected Routes**: All endpoints except `/health` require authentication via `@login_required`
+- **Protected Routes**: All app endpoints except `/auth/*` and `/health` require authentication via `@login_required`
 - **CSRF Protection**: All forms are protected with Flask-WTF CSRF tokens
 - **Rate Limiting**: 10 requests/minute on sensitive endpoints (create/update/delete)
 - **Input Validation**: Marshmallow schemas validate all user input (length, type, format)
@@ -215,15 +253,14 @@ NorthFlow implements comprehensive web application security controls:
 - **Secure Configuration**: `SECRET_KEY` required from environment (no defaults)
 - **SQL Parameterization**: All database queries use prepared statements
 
-See [`.agent/SECURITY_AUDIT.md`](.agent/SECURITY_AUDIT.md) for detailed security audit findings and implementation status.
-
 ## Tooling & Quality Gates
 
-- `invoke lint` – run Ruff (Python), SQLFluff (SQL), and djlint (HTML/
-  Jinja) with auto-fix enabled.
+- `invoke lint` – run Ruff (Python), SQLFluff (SQL), djlint (HTML/
+  Jinja), and pymarkdown (Markdown); auto-fix where supported.
 - `invoke lint-python` – Python-only lint/format.
-- `invoke lint-sql` – SQL formatting/linting for `app/database`.
+- `invoke lint-sql` – SQL formatting/linting for `app/database` (SQLFluff MySQL dialect).
 - `invoke lint-html` – Template lint/format pass via djlint.
+- `invoke lint-markdown` – Markdown lint/format pass via pymarkdown.
 - `pytest tests/` – runs the DAL test suite (requires a reachable DB
   defined by your `.env`).
 
@@ -256,15 +293,15 @@ app/
 │   ├── answers.py              # Business logic for answer CRUD
 │   └── summary.py              # Business logic for daily summary
 ├── static/
-│   ├── css/style.css    # Base styles (400+ lines, OAuth styling)
+│   ├── css/style.css    # Base styles (OAuth styling)
 │   ├── js/main.js       # Placeholder JS hooks
 │   └── images/
 └── templates/
     ├── base.html        # Layout shell with conditional navigation
     ├── index.html       # Hero + features copy
-    ├── login.html       # OAuth login page with Google button
+    ├── login.html       # OAuth login page with Google/GitHub buttons
     ├── questions.html   # user_questions CRUD UI
-    ├── checkins.html    # Check-in list, filter, and create form
+    ├── checkins.html    # Check-in list and create form
     ├── checkin_detail.html # Check-in detail with dynamic answer forms
     └── summary.html     # Daily aggregation view with filters
 config.py                # Environment-aware settings with OAuth config

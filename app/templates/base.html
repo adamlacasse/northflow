@@ -20,6 +20,7 @@
                 <div class="container">
                     <h1>
                         <a href="{% if session.user_id %}{{ url_for("main.questions") }}{% else %}{{ url_for("auth.login") }}{% endif %}">Northflow</a>
+                        <span>version-2.beta</span>
                     </h1>
                     <ul>
                         {% if session.user_id %}

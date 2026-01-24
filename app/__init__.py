@@ -1,5 +1,7 @@
 """Flask application factory."""
 
+import os
+
 from flask import Flask
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -11,7 +13,7 @@ csrf = CSRFProtect()
 limiter = Limiter(key_func=get_remote_address)
 
 
-def create_app(config_name="default"):
+def create_app(config_name=None):
     """Create and configure the Flask application.
 
     Args:
@@ -25,7 +27,8 @@ def create_app(config_name="default"):
     # Load configuration
     from config import config
 
-    app.config.from_object(config[config_name])
+    selected_config = config_name or os.getenv("FLASK_ENV", "production")
+    app.config.from_object(config.get(selected_config, config["default"]))
 
     # Initialize CSRF protection
     csrf.init_app(app)

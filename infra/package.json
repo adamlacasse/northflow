@@ -1,0 +1,23 @@
+{
+  "name": "northflow-infra",
+  "version": "0.1.0",
+  "bin": {
+    "cdk": "bin/northflow.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "aws-cdk": "^2.155.0",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.155.0",
+    "constructs": "^10.3.0"
+  }
+}
