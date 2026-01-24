@@ -3,6 +3,8 @@
 A mindfulness/gratitude check-in app, created as the final project for
 CSC-6302 Database Principles
 
+> **Note for AI agents:** See [TODO.md](TODO.md) for open questions and code/doc alignment tasks.
+
 ## Overview
 
 NorthFlow currently provides:
@@ -201,9 +203,9 @@ curl http://localhost:5000/health
 
 ## Deployment (AWS CDK)
 
-The AWS CDK (TypeScript) deployment approach is documented in
-[docs/DEPLOYMENT_ACTIVE.md](docs/DEPLOYMENT_ACTIVE.md) with step-by-step
-instructions.
+NorthFlow deployment is **AWS-only** via CDK. See
+[docs/DEPLOYMENT_ACTIVE.md](docs/DEPLOYMENT_ACTIVE.md) for the target architecture and
+migration contract. CDK provisioning is currently a work in progress.
 
 ### Prerequisites
 

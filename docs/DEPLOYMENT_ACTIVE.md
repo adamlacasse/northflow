@@ -2,7 +2,8 @@
 
 > **Status:** Active  
 > **Audience:** Humans and AI agents working in this repo  
-> **Scope:** Current reality + supported future options only
+> **Scope:** Current reality + supported future options only  
+> **Related:** See [../TODO.md](../TODO.md) for open questions on app logic and data model.
 
 ---
 
@@ -28,6 +29,10 @@ NorthFlow is deployed using the following architecture:
 - **Public access:** EC2 public DNS (ALB / HTTPS may be added later)
 
 This is the **only active deployment model**.
+
+> **CDK Status:** Infrastructure-as-Code is in progress. The above architecture is the
+> **target state**. Provisioning and deployment automation via CDK (`infra/`) are
+> still being finalized.
 
 ---
 
