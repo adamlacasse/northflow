@@ -48,6 +48,10 @@ from config import Config
 bp = Blueprint("main", __name__)
 logger = logging.getLogger(__name__)
 
+MAIN_QUESTIONS = "main.questions"
+CHECKIN_DETAIL = "checkin_detail.html"
+MAIN_CHECKIN_DETAIL = "main.checkin_detail"
+
 
 def _db_creds() -> Dict[str, Any]:
     """Get database credentials from environment (always server-side)."""
@@ -76,7 +80,7 @@ def _get_current_user() -> int:
 @login_required
 def index():
     """Entry route. Redirect to questions page."""
-    return redirect(url_for("main.questions"))
+    return redirect(url_for(MAIN_QUESTIONS))
 
 
 @bp.route("/questions")
@@ -163,7 +167,7 @@ def new_checkin():
 
         if not is_valid:
             flash(error_msg, "danger")
-            return render_template("checkin_detail.html", checkin=None, answers=[])
+            return render_template(CHECKIN_DETAIL, checkin=None, answers=[])
 
         try:
             creds = _db_creds()
@@ -175,14 +179,14 @@ def new_checkin():
                 notes=cleaned.get("notes"),
             )
             flash("Check-in created.", "success")
-            return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+            return redirect(url_for(MAIN_CHECKIN_DETAIL, checkin_id=checkin_id))
         except DatabaseError as exc:
             logger.error(f"Database error creating checkin: {exc}", exc_info=True)
             flash("Unable to create check-in. Please try again.", "danger")
-            return render_template("checkin_detail.html", checkin=None, answers=[])
+            return render_template(CHECKIN_DETAIL, checkin=None, answers=[])
 
     # GET
-    return render_template("checkin_detail.html", checkin=None, answers=[])
+    return render_template(CHECKIN_DETAIL, checkin=None, answers=[])
 
 
 @bp.route("/checkins/<int:checkin_id>")
@@ -194,7 +198,7 @@ def checkin_detail(checkin_id: int):
         checkin = get_checkin(creds, checkin_id=checkin_id, user_id=current_user_id)
         answers = get_checkin_answers(creds, checkin_id=checkin_id)
         return render_template(
-            "checkin_detail.html",
+            CHECKIN_DETAIL,
             checkin=checkin,
             answers=answers,
         )
@@ -213,7 +217,7 @@ def edit_checkin(checkin_id: int):
 
     if not is_valid:
         flash(error_msg, "danger")
-        return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+        return redirect(url_for(MAIN_CHECKIN_DETAIL, checkin_id=checkin_id))
 
     try:
         creds = _db_creds()
@@ -230,7 +234,7 @@ def edit_checkin(checkin_id: int):
         logger.error(f"Database error updating checkin: {exc}", exc_info=True)
         flash("Unable to update check-in. Please try again.", "danger")
 
-    return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+    return redirect(url_for(MAIN_CHECKIN_DETAIL, checkin_id=checkin_id))
 
 
 @bp.route("/checkins/<int:checkin_id>/delete", methods=["POST"])
@@ -258,7 +262,7 @@ def new_question():
 
     if not is_valid:
         flash(error_msg, "danger")
-        return redirect(url_for("main.questions"))
+        return redirect(url_for(MAIN_QUESTIONS))
 
     try:
         creds = _db_creds()
@@ -274,7 +278,7 @@ def new_question():
         logger.error(f"Database error creating question: {exc}", exc_info=True)
         flash("Unable to add question. Please try again.", "danger")
 
-    return redirect(url_for("main.questions"))
+    return redirect(url_for(MAIN_QUESTIONS))
 
 
 @bp.route("/questions/<int:question_id>/edit", methods=["POST"])
@@ -286,7 +290,7 @@ def edit_question(question_id: int):
 
     if not is_valid:
         flash(error_msg, "danger")
-        return redirect(url_for("main.questions"))
+        return redirect(url_for(MAIN_QUESTIONS))
 
     try:
         creds = _db_creds()
@@ -303,7 +307,7 @@ def edit_question(question_id: int):
         logger.error(f"Database error updating question: {exc}", exc_info=True)
         flash("Unable to update question. Please try again.", "danger")
 
-    return redirect(url_for("main.questions"))
+    return redirect(url_for(MAIN_QUESTIONS))
 
 
 @bp.route("/questions/<int:question_id>/delete", methods=["POST"])
@@ -323,7 +327,7 @@ def delete_question_route(question_id: int):
         logger.error(f"Database error deleting question: {exc}", exc_info=True)
         flash("Unable to delete question. Please try again.", "danger")
 
-    return redirect(url_for("main.questions"))
+    return redirect(url_for(MAIN_QUESTIONS))
 
 
 @bp.route("/checkins/<int:checkin_id>/answers/<int:question_id>", methods=["POST"])
@@ -335,7 +339,7 @@ def save_answer(checkin_id: int, question_id: int):
 
     if not is_valid:
         flash(error_msg, "danger")
-        return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+        return redirect(url_for(MAIN_CHECKIN_DETAIL, checkin_id=checkin_id))
 
     try:
         add_answer(
@@ -350,7 +354,7 @@ def save_answer(checkin_id: int, question_id: int):
         logger.error(f"Database error saving answer: {exc}", exc_info=True)
         flash("Unable to save answer. Please try again.", "danger")
 
-    return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+    return redirect(url_for(MAIN_CHECKIN_DETAIL, checkin_id=checkin_id))
 
 
 @bp.route(
@@ -370,7 +374,7 @@ def delete_answer_route(checkin_id: int, question_id: int):
         logger.error(f"Database error deleting answer: {exc}", exc_info=True)
         flash("Unable to delete answer. Please try again.", "danger")
 
-    return redirect(url_for("main.checkin_detail", checkin_id=checkin_id))
+    return redirect(url_for(MAIN_CHECKIN_DETAIL, checkin_id=checkin_id))
 
 
 @bp.route("/health")
