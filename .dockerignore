@@ -7,8 +7,5 @@ __pycache__/
 .venv/
 venv/
 node_modules/
-infra/node_modules/
-infra/cdk.out/
-cdk.out/
 .git/
 .DS_Store

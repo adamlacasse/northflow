@@ -225,17 +225,15 @@ curl http://localhost:5000/health
 
 `/auth/*` and `/health` are the only endpoints that don't require authentication.
 
-## Deployment (AWS CDK)
+## Deployment
 
-NorthFlow deployment is **AWS-only** via CDK. See
-[docs/DEPLOYMENT_ACTIVE.md](docs/DEPLOYMENT_ACTIVE.md) for the target architecture and
-migration contract. CDK provisioning is currently a work in progress.
+NorthFlow can be run locally or via Docker Compose. See
+[docs/DEPLOYMENT_ACTIVE.md](docs/DEPLOYMENT_ACTIVE.md) for the deployment model and
+migration contract.
 
 ### Prerequisites
 
-- AWS CLI configured (`aws sts get-caller-identity` works)
-- Node 18+ / npm
-- Docker
+- Docker (for containerized runs)
 
 ## Security
 
