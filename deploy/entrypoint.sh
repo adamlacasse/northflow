@@ -5,6 +5,8 @@ MODE=${1:-web}
 shift || true
 
 if [ "$MODE" = "web" ]; then
+  echo "Applying schema objects..."
+  MIGRATE_MODE=objects /app/deploy/migrate.sh
   CONFIG_NAME=${FLASK_ENV:-production}
   exec gunicorn --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 60 "app:create_app('${CONFIG_NAME}')"
 elif [ "$MODE" = "migrate" ]; then

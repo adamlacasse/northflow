@@ -18,13 +18,15 @@ If any other file, diagram, or comment conflicts with this document:
 
 ## 2. Current Reality (Authoritative)
 
-NorthFlow runs locally or via Docker Compose. There is no cloud deployment target
-at this time.
+NorthFlow is deployed on Railway (or run locally via Docker Compose).
 
-- **Application runtime:** Docker container (Flask + gunicorn) or direct `python run.py`
-- **Process model:** Docker Compose (`docker-compose.yml`) for production-like local runs
-- **Database:** MySQL 8.0 (local install or Docker Compose `db` service)
-- **Secrets:** Environment variables loaded from `.env`
+- **Application runtime:** Docker container (Flask + gunicorn) on Railway
+- **Database:** MySQL 8.0 on Railway (managed service)
+- **Networking:** Web service connects to MySQL over Railway's private network
+- **Secrets:** Environment variables configured in the Railway dashboard
+- **TLS:** Handled automatically by Railway
+- **DNS:** Cloudflare CNAME pointing to Railway's domain
+- **Local development:** Docker Compose (`docker-compose.yml`) or direct `python run.py`
 
 ---
 
@@ -44,10 +46,16 @@ Characteristics:
 - May seed data
 - **Never repeatable**
 
-Command:
+Command (local):
 
 ```bash
 MIGRATE_MODE=schema ./deploy/migrate.sh
+```
+
+Command (Railway CLI):
+
+```bash
+MIGRATE_MODE=schema railway run --service web -- /app/deploy/migrate.sh
 ```
 
 ⚠️ Never run this against an existing environment.
@@ -62,20 +70,19 @@ Uses DROP … IF EXISTS + CREATE …
 Safe and repeatable
 Deterministic
 
-Command:
+This runs automatically on every deploy via `deploy/entrypoint.sh` before
+gunicorn starts. It can also be run manually:
 
 ```bash
 MIGRATE_MODE=objects ./deploy/migrate.sh
 ```
-
-This step must complete successfully before the web application starts.
 
 ## 4. Application Startup Contract
 
 The correct startup order is:
 
 1. Database is reachable
-2. apply_schema_objects has run successfully
+2. apply_schema_objects has run successfully (automatic via entrypoint)
 3. Web container starts
 
 The application must not serve traffic unless required DB routines exist.
@@ -88,21 +95,22 @@ The /health endpoint enforces readiness:
 - 503 — database reachable but required routines missing
 - 200 — database reachable and schema objects present
 
-This prevents race conditions where routes attempt to call missing procedures.
+Railway uses this endpoint to determine when to route traffic to the service.
 
 ## 6. Operational Notes
 
 - Schema bootstrap is manual and intentional
-- Schema object application is automatic and repeatable
+- Schema object application is automatic on every deploy
 - Deployment scripts default to safe behavior
-- Logs are obtained from container stdout/stderr
+- Logs are available in the Railway dashboard
+- Deploys are triggered by pushing to the GitHub repo
 
 ## 7. Rule for AI Agents
 
 Agents must:
 
 - Respect the database migration contract
-- Run apply_schema_objects before starting the app
-- Avoid introducing cloud services without an explicit decision update
+- Never run destructive bootstrap against an existing environment
+- Avoid introducing new cloud services without an explicit decision update
 
 If uncertain, **stop and ask** rather than inventing infrastructure.

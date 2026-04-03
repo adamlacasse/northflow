@@ -227,13 +227,17 @@ curl http://localhost:5000/health
 
 ## Deployment
 
-NorthFlow can be run locally or via Docker Compose. See
+NorthFlow deploys to Railway (web service + MySQL). See
 [docs/DEPLOYMENT_ACTIVE.md](docs/DEPLOYMENT_ACTIVE.md) for the deployment model and
-migration contract.
+migration contract, or [docs/PLAN_DEPLOY_RAILWAY.md](docs/PLAN_DEPLOY_RAILWAY.md) for
+the step-by-step setup guide.
+
+For local development, use Docker Compose or run directly with `python run.py`.
 
 ### Prerequisites
 
 - Docker (for containerized runs)
+- Railway account on the Hobby plan (for cloud deployment)
 
 ## Security
 

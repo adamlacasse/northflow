@@ -4,6 +4,6 @@
 
 ## Deployment Runtime (Active)
 
-- Application runtime: Docker container (local / Docker Compose)
-- Database: MySQL 8.0 (local or containerized)
-- Cloud deployment: explicitly removed; no active cloud target
+- Application runtime: Docker container on Railway (Flask + gunicorn)
+- Database: MySQL 8.0 on Railway (managed service)
+- Previous cloud target (AWS CDK) explicitly removed on 2026-04-03
