@@ -195,11 +195,19 @@ def checkin_detail(checkin_id: int):
         creds = _db_creds()
         current_user_id = _get_current_user()
         checkin = get_checkin(creds, checkin_id=checkin_id, user_id=current_user_id)
-        answers = get_checkin_answers(creds, checkin_id=checkin_id)
+        answers_list = get_checkin_answers(creds, checkin_id=checkin_id)
+        # Template expects a dict keyed by question_id for O(1) lookup
+        answers = {a["question_id"]: a for a in answers_list}
+        all_questions = list_user_questions(creds)
+        my_questions = [
+            q for q in all_questions
+            if q["user_id"] == current_user_id and q["is_active"]
+        ]
         return render_template(
             CHECKIN_DETAIL,
             checkin=checkin,
             answers=answers,
+            questions=my_questions,
         )
     except DatabaseError as exc:
         logger.error(f"Database error loading checkin: {exc}", exc_info=True)
