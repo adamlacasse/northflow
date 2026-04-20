@@ -221,13 +221,16 @@ def edit_checkin(checkin_id: int):
     try:
         creds = _db_creds()
         current_user_id = _get_current_user()
-        update_checkin(
+        updated = update_checkin(
             creds,
             checkin_id=checkin_id,
             user_id=current_user_id,
             notes=cleaned.get("notes"),
         )
-        flash("Check-in updated.", "success")
+        if updated:
+            flash("Check-in updated.", "success")
+        else:
+            flash("Check-in not found or you don't have permission to edit it.", "danger")
     except DatabaseError as exc:
         logger.error(f"Database error updating checkin: {exc}", exc_info=True)
         flash("Unable to update check-in. Please try again.", "danger")
@@ -297,7 +300,7 @@ def edit_question(question_id: int):
     try:
         creds = _db_creds()
         current_user_id = _get_current_user()
-        update_user_question(
+        updated = update_user_question(
             creds,
             question_id=question_id,
             user_id=current_user_id,
@@ -306,7 +309,10 @@ def edit_question(question_id: int):
             is_active=cleaned.get("is_active"),
             sort_order=cleaned.get("sort_order"),
         )
-        flash("Question updated.", "success")
+        if updated:
+            flash("Question updated.", "success")
+        else:
+            flash("Question not found or you don't have permission to edit it.", "danger")
     except DatabaseError as exc:
         logger.error(f"Database error updating question: {exc}", exc_info=True)
         flash("Unable to update question. Please try again.", "danger")

@@ -46,6 +46,7 @@ def update_checkin(
         _, updated_params = db.call_procedure(
             "update_checkin", (checkin_id, user_id, notes, 0)
         )
+        db.commit()
         # The OUT parameter p_success is in updated_params
         return updated_params[3] == 1
     finally:
