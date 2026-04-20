@@ -254,8 +254,7 @@ def delete_checkin_route(checkin_id: int):
 @login_required
 def new_question():
     form_data = request.form.to_dict(flat=True)
-    if "is_active" in request.form:
-        form_data["is_active"] = "is_active"
+    form_data["is_active"] = "is_active" in request.form
     is_valid, cleaned, error_msg = validate_form(QuestionSchema, form_data)
 
     if not is_valid:
@@ -286,8 +285,7 @@ def new_question():
 @login_required
 def edit_question(question_id: int):
     form_data = request.form.to_dict(flat=True)
-    if "is_active" in request.form:
-        form_data["is_active"] = "is_active"
+    form_data["is_active"] = "is_active" in request.form
     is_valid, cleaned, error_msg = validate_form(QuestionSchema, form_data)
 
     if not is_valid:
