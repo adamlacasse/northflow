@@ -6,6 +6,7 @@ from flask import Flask
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.auth import init_oauth
 
@@ -23,6 +24,9 @@ def create_app(config_name=None):
         Flask application instance
     """
     app = Flask(__name__)
+    # Trust the first reverse proxy for scheme/host so external URLs,
+    # including OAuth callbacks, are generated correctly behind Railway.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_proto=1)
 
     # Load configuration
     from config import config
