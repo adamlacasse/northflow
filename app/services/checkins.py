@@ -37,27 +37,32 @@ def update_checkin(
     creds: Dict[str, Any],
     *,
     checkin_id: int,
+    user_id: int,
     notes: str = "",
 ) -> bool:
-    """Update a check-in's notes. Returns True if successful."""
+    """Update a check-in's notes. Only succeeds if checkin_id belongs to user_id."""
     try:
-        return dal_update_checkin(creds, checkin_id=checkin_id, notes=notes)
+        return dal_update_checkin(
+            creds, checkin_id=checkin_id, user_id=user_id, notes=notes
+        )
     except Exception as exc:  # noqa: BLE001
         raise DatabaseError(str(exc)) from exc
 
 
-def delete_checkin(creds: Dict[str, Any], *, checkin_id: int) -> None:
-    """Delete a check-in and all associated answers."""
+def delete_checkin(creds: Dict[str, Any], *, checkin_id: int, user_id: int) -> None:
+    """Delete a check-in owned by user_id and all associated answers."""
     try:
-        dal_delete_checkin(creds, checkin_id=checkin_id)
+        dal_delete_checkin(creds, checkin_id=checkin_id, user_id=user_id)
     except Exception as exc:  # noqa: BLE001
         raise DatabaseError(str(exc)) from exc
 
 
-def get_checkin(creds: Dict[str, Any], *, checkin_id: int) -> Dict[str, Any]:
-    """Retrieve a single check-in by ID."""
+def get_checkin(
+    creds: Dict[str, Any], *, checkin_id: int, user_id: int
+) -> Dict[str, Any]:
+    """Retrieve a single check-in by ID, scoped to the owning user."""
     try:
-        return dal_get_checkin(creds, checkin_id=checkin_id)
+        return dal_get_checkin(creds, checkin_id=checkin_id, user_id=user_id)
     except Exception as exc:  # noqa: BLE001
         raise DatabaseError(str(exc)) from exc
 

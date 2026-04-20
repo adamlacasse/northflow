@@ -204,6 +204,7 @@ END$$
 
 CREATE PROCEDURE update_user_question (
     IN p_question_id INT,
+    IN p_user_id INT,
     IN p_question_text TEXT,
     IN p_question_type VARCHAR(20),
     IN p_is_active TINYINT(1),
@@ -228,17 +229,18 @@ BEGIN
         question_type = p_question_type,
         is_active = p_is_active,
         sort_order = p_sort_order
-    WHERE id = p_question_id;
+    WHERE id = p_question_id AND user_id = p_user_id;
 
     SET p_success = (ROW_COUNT() > 0);
 END$$
 
 CREATE PROCEDURE delete_user_question (
-    IN p_question_id INT
+    IN p_question_id INT,
+    IN p_user_id INT
 )
 BEGIN
     DELETE FROM user_questions
-    WHERE id = p_question_id;
+    WHERE id = p_question_id AND user_id = p_user_id;
 END$$
 
 CREATE PROCEDURE add_checkin (
@@ -253,27 +255,30 @@ END$$
 
 CREATE PROCEDURE update_checkin (
     IN p_checkin_id INT,
+    IN p_user_id INT,
     IN p_notes TEXT,
     OUT p_success TINYINT(1)
 )
 BEGIN
     UPDATE checkins
     SET notes = p_notes
-    WHERE id = p_checkin_id;
+    WHERE id = p_checkin_id AND user_id = p_user_id;
 
     SET p_success = (ROW_COUNT() > 0);
 END$$
 
 CREATE PROCEDURE delete_checkin (
-    IN p_checkin_id INT
+    IN p_checkin_id INT,
+    IN p_user_id INT
 )
 BEGIN
     DELETE FROM checkins
-    WHERE id = p_checkin_id;
+    WHERE id = p_checkin_id AND user_id = p_user_id;
 END$$
 
 CREATE PROCEDURE get_checkin (
-    IN p_checkin_id INT
+    IN p_checkin_id INT,
+    IN p_user_id INT
 )
 BEGIN
     SELECT
@@ -284,7 +289,7 @@ BEGIN
         c.notes
     FROM checkins AS c
     JOIN users AS u ON u.id = c.user_id
-    WHERE c.id = p_checkin_id;
+    WHERE c.id = p_checkin_id AND c.user_id = p_user_id;
 END$$
 
 CREATE PROCEDURE list_checkins (

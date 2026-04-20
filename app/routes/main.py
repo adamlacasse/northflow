@@ -220,9 +220,11 @@ def edit_checkin(checkin_id: int):
 
     try:
         creds = _db_creds()
+        current_user_id = _get_current_user()
         update_checkin(
             creds,
             checkin_id=checkin_id,
+            user_id=current_user_id,
             notes=cleaned.get("notes"),
         )
         flash("Check-in updated.", "success")
@@ -294,9 +296,11 @@ def edit_question(question_id: int):
 
     try:
         creds = _db_creds()
+        current_user_id = _get_current_user()
         update_user_question(
             creds,
             question_id=question_id,
+            user_id=current_user_id,
             question_text=cleaned.get("question_text"),
             question_type=cleaned.get("question_type"),
             is_active=cleaned.get("is_active"),

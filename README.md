@@ -194,12 +194,12 @@ Use these signatures exactly when calling routines through the DAL:
 | `health_check` | none |
 | `list_user_questions` | none |
 | `add_user_question` | `p_user_id`, `p_question_text`, `p_question_type`, `p_is_active`, `p_sort_order` |
-| `update_user_question` | `p_question_id`, `p_question_text`, `p_question_type`, `p_is_active`, `p_sort_order` |
-| `delete_user_question` | `p_question_id` |
+| `update_user_question` | `p_question_id`, `p_user_id`, `p_question_text`, `p_question_type`, `p_is_active`, `p_sort_order`, OUT `p_success` |
+| `delete_user_question` | `p_question_id`, `p_user_id` |
 | `add_checkin` | `p_user_id`, `p_notes` |
-| `update_checkin` | `p_checkin_id`, `p_notes` |
-| `delete_checkin` | `p_checkin_id` |
-| `get_checkin` | `p_checkin_id` |
+| `update_checkin` | `p_checkin_id`, `p_user_id`, `p_notes`, OUT `p_success` |
+| `delete_checkin` | `p_checkin_id`, `p_user_id` |
+| `get_checkin` | `p_checkin_id`, `p_user_id` |
 | `list_checkins` | `p_user_id` |
 | `add_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score` |
 | `update_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score` |

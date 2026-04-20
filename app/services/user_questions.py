@@ -52,6 +52,7 @@ def update_user_question(
     creds: Dict[str, Any],
     *,
     question_id: int,
+    user_id: int,
     question_text: str,
     question_type: str,
     is_active: bool,
@@ -61,6 +62,7 @@ def update_user_question(
         return dal_update_user_question(
             creds,
             question_id=question_id,
+            user_id=user_id,
             question_text=question_text,
             question_type=question_type,
             is_active=is_active,
@@ -70,8 +72,10 @@ def update_user_question(
         raise DatabaseError(str(exc)) from exc
 
 
-def delete_user_question(creds: Dict[str, Any], *, question_id: int) -> None:
+def delete_user_question(
+    creds: Dict[str, Any], *, question_id: int, user_id: int
+) -> None:
     try:
-        dal_delete_user_question(creds, question_id=question_id)
+        dal_delete_user_question(creds, question_id=question_id, user_id=user_id)
     except Exception as exc:  # noqa: BLE001
         raise DatabaseError(str(exc)) from exc
