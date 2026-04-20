@@ -16,7 +16,7 @@ NorthFlow is a Flask-based mindfulness/gratitude check-in app built as the first
 
 ### Authentication & Authorization (`app/routes/auth.py` + `app/auth.py`)
 
-- **OAuth 2.0**: Third-party authentication via Google (uses `authlib`)
+- **OAuth 2.0**: Third-party authentication via Google only (uses `authlib`)
 - **No password storage**: Users authenticate through Google OAuth
 - **Auto-registration**: New users are automatically created on first login
 - **Session management**: Sessions are persistent (`session.permanent = True`) with 1-hour timeout
@@ -45,7 +45,7 @@ NorthFlow is a Flask-based mindfulness/gratitude check-in app built as the first
 ### Routing
 
 - **Authentication blueprint** (`app/routes/auth.py`):
-  - `GET /auth/login`: Show OAuth login page with Google button
+  - `GET /auth/login`: Show OAuth login page with Google sign-in button
   - `GET /auth/login/google`: Redirect to Google OAuth
   - `GET /auth/callback/google`: Handle OAuth callback (auto-register or login user)
   - `GET /auth/logout`: Clear session and redirect to login
@@ -79,7 +79,7 @@ NorthFlow is a Flask-based mindfulness/gratitude check-in app built as the first
 1. Create `.env` file with: `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `SECRET_KEY`, `FLASK_ENV`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 2. `pip install -r requirements.txt` (installs package + dev tools from `pyproject.toml`)
 3. `invoke execute-schema` to create database and tables
-4. Register app with Google Cloud Console to get OAuth credentials
+4. Register app with [Google Cloud Console](https://console.cloud.google.com) to get OAuth credentials
 
 ### Running the App
 

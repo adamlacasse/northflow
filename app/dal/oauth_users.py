@@ -12,7 +12,7 @@ def get_user_by_oauth(
 
     Args:
         creds: Database credentials
-        oauth_provider: OAuth provider name ('google' or 'github')
+        oauth_provider: OAuth provider name (e.g., 'google')
         oauth_id: Provider's unique user ID
 
     Returns:
@@ -77,7 +77,7 @@ def create_oauth_user(
 
     Args:
         creds: Database credentials
-        oauth_provider: OAuth provider name ('google' or 'github')
+        oauth_provider: OAuth provider name (e.g., 'google')
         oauth_id: Provider's unique user ID
         email: User email address
         first_name: User's first name (optional)

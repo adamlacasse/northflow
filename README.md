@@ -9,7 +9,7 @@ CSC-6302 Database Principles
 
 NorthFlow currently provides:
 
-- **OAuth 2.0 Authentication**: Secure login with Google and GitHub OAuth (no password storage)
+- **OAuth 2.0 Authentication**: Secure login with Google OAuth (no password storage)
 - A Flask app factory (`app/__init__.py`) that wires configuration,
   routes, and assets with CSRF protection, rate limiting, and security headers.
 - A `DatabaseConnection` helper (`app/dal/database_connection.py`) that wraps
@@ -44,16 +44,14 @@ This feature demonstrates meaningful data summarization beyond basic CRUD operat
   `python-dotenv` and defines `DevelopmentConfig`, `TestingConfig`, and
   `ProductionConfig` classes. All rely on the `northflow` database by
   default.
-- **Authentication**: OAuth 2.0 with Google and GitHub (via `authlib`). Users auto-register
+- **Authentication**: OAuth 2.0 with Google (via `authlib`). Users auto-register
   on first login. Sessions are permanent with 1-hour timeout. All app routes except
   `/auth/*` and `/health` require authentication via `@login_required`.
 - **Blueprints**:
   - **`app/routes/auth.py`** exposes:
-    - `GET /auth/login` – OAuth login page with Google/GitHub sign-in buttons
+    - `GET /auth/login` – OAuth login page with Google sign-in button
     - `GET /auth/login/google` – Redirect to Google OAuth
     - `GET /auth/callback/google` – Handle Google OAuth callback (auto-register or login)
-    - `GET /auth/login/github` – Redirect to GitHub OAuth
-    - `GET /auth/callback/github` – Handle GitHub OAuth callback (auto-register or login)
     - `GET /auth/logout` – Clear session and log out
   - **`app/routes/main.py`** exposes (all protected by `@login_required` unless noted):
     - `GET /` – Redirects to questions page
@@ -126,10 +124,6 @@ SECRET_KEY=your-secure-random-key
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# OAuth Configuration (GitHub)
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
-
 # Environment
 FLASK_ENV=development
 ```
@@ -142,7 +136,7 @@ FLASK_ENV=development
   python3 -c 'import secrets; print(secrets.token_hex(32))'
   ```
 
-- For OAuth to work, register your app with the provider(s) you intend to use (Google/GitHub) and add the credentials above.
+- For OAuth to work, register your app with Google and add the credentials above.
 
 ### Google OAuth Setup
 
@@ -153,14 +147,6 @@ FLASK_ENV=development
 5. Choose "Web application"
 6. Add authorized redirect URI: `http://localhost:5000/auth/callback/google` (development)
 7. Copy the Client ID and Client Secret to your `.env` file
-
-### GitHub OAuth Setup
-
-1. Go to GitHub Settings -> Developer settings -> OAuth Apps
-2. Click "New OAuth App"
-3. Set "Homepage URL" to `http://localhost:5000` (development)
-4. Set "Authorization callback URL" to `http://localhost:5000/auth/callback/github`
-5. Copy the Client ID and Client Secret to your `.env` file
 
 The app will fail to start if `SECRET_KEY` is not set in the environment.
 
@@ -209,7 +195,7 @@ Use these signatures exactly when calling routines through the DAL:
 
 ### Behavioral contracts
 
-- Use stored procedures for app data operations; raw SQL is only allowed in `app/dal/oauth_users.py`.
+- Use stored procedures for app data operations; raw SQL is only allowed in `app/dal/oauth_users.py` (OAuth user lookups).
 - All routes require authentication except `/auth/*` and `/health`.
 - Include a CSRF token hidden input in every HTML form.
 - OAuth callbacks must set `session.permanent = True` (1-hour session lifetime).
@@ -266,7 +252,7 @@ Visit `http://localhost:5000` to access the application.
 ### Authentication Flow
 
 1. Navigate to `http://localhost:5000` – you'll be redirected to `/auth/login`
-2. Click "Sign in with Google" or "Sign in with GitHub" to authenticate via OAuth 2.0
+2. Click "Sign in with Google" to authenticate via OAuth 2.0
 3. On first login, your account will be auto-created in the database
 4. After successful login, you'll be redirected to `/questions`
 5. Your user info and logout link will appear in the navigation bar
@@ -313,7 +299,7 @@ For local development, use Docker Compose or run directly with `python run.py`.
 
 NorthFlow implements comprehensive web application security controls:
 
-- **OAuth 2.0 Authentication**: Third-party authentication via Google and GitHub (no password storage)
+- **OAuth 2.0 Authentication**: Third-party authentication via Google (no password storage)
 - **Session Management**: Persistent sessions with 1-hour timeout, secure cookie settings
 - **Protected Routes**: All app endpoints except `/auth/*` and `/health` require authentication via `@login_required`
 - **CSRF Protection**: All forms are protected with Flask-WTF CSRF tokens
@@ -371,7 +357,7 @@ app/
 └── templates/
     ├── base.html        # Layout shell with conditional navigation
     ├── index.html       # Hero + features copy
-    ├── login.html       # OAuth login page with Google/GitHub buttons
+    ├── login.html       # OAuth login page with Google sign-in button
     ├── questions.html   # user_questions CRUD UI
     ├── checkins.html    # Check-in list and create form
     ├── checkin_detail.html # Check-in detail with dynamic answer forms

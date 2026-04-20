@@ -25,7 +25,7 @@ Before starting:
 
 - A Railway account (<https://railway.app>) on the Hobby plan ($5/month)
 - The GitHub repo (`adamlacasse/northflow`) accessible from Railway
-- Google and GitHub OAuth credentials (existing ones; redirect URIs will change)
+- Google OAuth credentials (existing ones; redirect URIs will change)
 - Cloudflare DNS access for `adamlacasse.dev` (if using a custom domain)
 
 ---
@@ -92,8 +92,6 @@ Go to the web service → **Variables** tab and add:
 | `FLASK_ENV` | `production` | Selects `ProductionConfig` |
 | `GOOGLE_CLIENT_ID` | *(your value)* | From Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | *(your value)* | From Google Cloud Console |
-| `GITHUB_CLIENT_ID` | *(your value)* | From GitHub Developer Settings |
-| `GITHUB_CLIENT_SECRET` | *(your value)* | From GitHub Developer Settings |
 | `OAUTH_REDIRECT_URI` | `https://your-domain.com/auth/callback` | Update after custom domain is set |
 
 **Note on `DATABASE`:** The app's `config.py` hardcodes `DATABASE = "northflow"`.
@@ -228,11 +226,7 @@ After the custom domain is live:
    your OAuth client → add authorized redirect URI:
    `https://app.adamlacasse.dev/auth/callback/google`
 
-2. **GitHub Developer Settings** → OAuth Apps → your app →
-   update callback URL:
-   `https://app.adamlacasse.dev/auth/callback/github`
-
-3. Update the `OAUTH_REDIRECT_URI` env var in Railway to match.
+2. Update the `OAUTH_REDIRECT_URI` env var in Railway to match.
 
 ---
 
@@ -242,7 +236,6 @@ After deployment, confirm:
 
 - [ ] `https://app.adamlacasse.dev/health` returns 200
 - [ ] Google OAuth login works end-to-end
-- [ ] GitHub OAuth login works end-to-end
 - [ ] Creating a question, check-in, and answer all succeed
 - [ ] The `/summary` page loads with data
 
