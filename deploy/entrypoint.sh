@@ -2,7 +2,9 @@
 set -e
 
 MODE=${1:-web}
-shift || true
+if [ "$#" -gt 0 ]; then
+  shift
+fi
 
 if [ "$MODE" = "web" ]; then
   echo "Applying schema objects..."
