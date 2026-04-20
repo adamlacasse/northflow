@@ -42,7 +42,12 @@ class Config:
     WTF_CSRF_TIME_LIMIT = None  # No time limit on CSRF tokens
 
     # Rate Limiting
-    RATELIMIT_STORAGE_URL = "memory://"
+    # Prefer a shared backend (Redis) in production so limits are consistent
+    # across gunicorn workers. Railway exposes REDIS_URL when a Redis service
+    # is attached; falls back to in-memory for local dev.
+    RATELIMIT_STORAGE_URL = os.getenv(
+        "RATELIMIT_STORAGE_URL", os.getenv("REDIS_URL", "memory://")
+    )
     RATELIMIT_DEFAULT = "200/hour"  # Global default
 
     # OAuth Configuration

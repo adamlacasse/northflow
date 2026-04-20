@@ -22,7 +22,12 @@ RUN pip install --upgrade pip \
 # Copy the rest of the application code
 COPY . /app
 
-EXPOSE 5000
+# Ensure deploy scripts are executable (cross-platform safety)
+RUN chmod +x /app/deploy/entrypoint.sh /app/deploy/migrate.sh
 
-# Default command; bind host/port already handled in run.py
-CMD ["python", "run.py"]
+EXPOSE 8000
+
+# Production entrypoint: applies idempotent schema objects, then execs gunicorn.
+# To run the destructive one-time schema bootstrap instead, override the
+# command with: /app/deploy/entrypoint.sh migrate (with MIGRATE_MODE=schema).
+CMD ["/app/deploy/entrypoint.sh"]
