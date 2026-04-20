@@ -94,7 +94,6 @@ Go to the web service → **Variables** tab and add:
 | `GOOGLE_CLIENT_SECRET` | *(your value)* | From Google Cloud Console |
 | `GITHUB_CLIENT_ID` | *(your value)* | From GitHub Developer Settings |
 | `GITHUB_CLIENT_SECRET` | *(your value)* | From GitHub Developer Settings |
-| `OAUTH_REDIRECT_URI` | `https://your-domain.com/auth/callback` | Update after custom domain is set |
 
 **Note on `DATABASE`:** The app's `config.py` hardcodes `DATABASE = "northflow"`.
 If you want to use Railway's default database name (`railway`), you will need a
@@ -215,9 +214,6 @@ This lets the env var override the default while keeping local dev unchanged.
    | CNAME | `app` | `your-service.up.railway.app` | DNS only (grey cloud) |
 
 4. Railway handles TLS automatically (no certificate management needed)
-5. Once the domain resolves, update `OAUTH_REDIRECT_URI` in Railway to
-   `https://app.adamlacasse.dev/auth/callback`
-
 ---
 
 ## Step 9: Update OAuth Redirect URIs
@@ -231,8 +227,6 @@ After the custom domain is live:
 2. **GitHub Developer Settings** → OAuth Apps → your app →
    update callback URL:
    `https://app.adamlacasse.dev/auth/callback/github`
-
-3. Update the `OAUTH_REDIRECT_URI` env var in Railway to match.
 
 ---
 

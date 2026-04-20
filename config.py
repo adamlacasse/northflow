@@ -62,20 +62,12 @@ class Config:
     GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
     GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 
-    # OAuth Redirect URIs (will be set per environment)
-    OAUTH_REDIRECT_URI = os.getenv(
-        "OAUTH_REDIRECT_URI", "http://localhost:5000/auth/callback"
-    )
-
-
 class DevelopmentConfig(Config):
     """Development configuration."""
 
     DEBUG = True
     # For local development without HTTPS
     SESSION_COOKIE_SECURE = False
-    # OAuth redirect for local development
-    OAUTH_REDIRECT_URI = "http://localhost:5000/auth/callback"
 
 
 class TestingConfig(Config):
