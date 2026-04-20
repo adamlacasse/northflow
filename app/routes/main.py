@@ -175,7 +175,6 @@ def new_checkin():
             checkin_id = create_checkin(
                 creds,
                 user_id=current_user_id,
-                checkin_date=cleaned.get("checkin_date"),
                 notes=cleaned.get("notes"),
             )
             flash("Check-in created.", "success")
@@ -222,14 +221,16 @@ def edit_checkin(checkin_id: int):
     try:
         creds = _db_creds()
         current_user_id = _get_current_user()
-        update_checkin(
+        updated = update_checkin(
             creds,
             checkin_id=checkin_id,
             user_id=current_user_id,
-            checkin_date=cleaned.get("checkin_date"),
             notes=cleaned.get("notes"),
         )
-        flash("Check-in updated.", "success")
+        if updated:
+            flash("Check-in updated.", "success")
+        else:
+            flash("Check-in not found or you don't have permission to edit it.", "danger")
     except DatabaseError as exc:
         logger.error(f"Database error updating checkin: {exc}", exc_info=True)
         flash("Unable to update check-in. Please try again.", "danger")
@@ -258,6 +259,7 @@ def delete_checkin_route(checkin_id: int):
 @login_required
 def new_question():
     form_data = request.form.to_dict(flat=True)
+    form_data["is_active"] = "is_active" in request.form
     is_valid, cleaned, error_msg = validate_form(QuestionSchema, form_data)
 
     if not is_valid:
@@ -271,7 +273,9 @@ def new_question():
             creds,
             user_id=current_user_id,
             question_text=cleaned.get("question_text"),
+            question_type=cleaned.get("question_type"),
             is_active=cleaned.get("is_active"),
+            sort_order=cleaned.get("sort_order"),
         )
         flash("Question added.", "success")
     except DatabaseError as exc:
@@ -286,6 +290,7 @@ def new_question():
 @login_required
 def edit_question(question_id: int):
     form_data = request.form.to_dict(flat=True)
+    form_data["is_active"] = "is_active" in request.form
     is_valid, cleaned, error_msg = validate_form(QuestionSchema, form_data)
 
     if not is_valid:
@@ -295,14 +300,19 @@ def edit_question(question_id: int):
     try:
         creds = _db_creds()
         current_user_id = _get_current_user()
-        update_user_question(
+        updated = update_user_question(
             creds,
             question_id=question_id,
             user_id=current_user_id,
             question_text=cleaned.get("question_text"),
+            question_type=cleaned.get("question_type"),
             is_active=cleaned.get("is_active"),
+            sort_order=cleaned.get("sort_order"),
         )
-        flash("Question updated.", "success")
+        if updated:
+            flash("Question updated.", "success")
+        else:
+            flash("Question not found or you don't have permission to edit it.", "danger")
     except DatabaseError as exc:
         logger.error(f"Database error updating question: {exc}", exc_info=True)
         flash("Unable to update question. Please try again.", "danger")

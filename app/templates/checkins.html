@@ -4,7 +4,7 @@
     <section class="card">
         <h2>Create Check-in</h2>
         <form method="post"
-              action="{{ url_for("main.create_checkin_route") }}"
+              action="{{ url_for('main.new_checkin') }}"
               class="form-grid">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>

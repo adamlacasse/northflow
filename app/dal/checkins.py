@@ -31,9 +31,10 @@ def create_checkin(
 def update_checkin(
     creds: Dict[str, Any],
     checkin_id: int,
+    user_id: int,
     notes: str = "",
 ) -> bool:
-    """Update a check-in's notes. Returns True if successful."""
+    """Update a check-in's notes. Returns True if a row owned by user_id was updated."""
     db = DatabaseConnection(
         host=creds.get("host"),
         user=creds.get("user"),
@@ -42,15 +43,18 @@ def update_checkin(
         port=creds.get("port"),
     )
     try:
-        _, updated_params = db.call_procedure("update_checkin", (checkin_id, notes, 0))
+        _, updated_params = db.call_procedure(
+            "update_checkin", (checkin_id, user_id, notes, 0)
+        )
+        db.commit()
         # The OUT parameter p_success is in updated_params
-        return updated_params[2] == 1
+        return updated_params[3] == 1
     finally:
         db.close()
 
 
-def delete_checkin(creds: Dict[str, Any], checkin_id: int) -> None:
-    """Delete a check-in and all associated answers."""
+def delete_checkin(creds: Dict[str, Any], checkin_id: int, user_id: int) -> None:
+    """Delete a check-in owned by user_id and all associated answers."""
     db = DatabaseConnection(
         host=creds.get("host"),
         user=creds.get("user"),
@@ -59,14 +63,14 @@ def delete_checkin(creds: Dict[str, Any], checkin_id: int) -> None:
         port=creds.get("port"),
     )
     try:
-        db.call_procedure("delete_checkin", (checkin_id,))
+        db.call_procedure("delete_checkin", (checkin_id, user_id))
         db.commit()
     finally:
         db.close()
 
 
-def get_checkin(creds: Dict[str, Any], checkin_id: int) -> Dict[str, Any]:
-    """Retrieve a single check-in by ID."""
+def get_checkin(creds: Dict[str, Any], checkin_id: int, user_id: int) -> Dict[str, Any]:
+    """Retrieve a single check-in by ID, scoped to the owning user."""
     db = DatabaseConnection(
         host=creds.get("host"),
         user=creds.get("user"),
@@ -75,7 +79,7 @@ def get_checkin(creds: Dict[str, Any], checkin_id: int) -> Dict[str, Any]:
         port=creds.get("port"),
     )
     try:
-        results, _ = db.call_procedure("get_checkin", (checkin_id,))
+        results, _ = db.call_procedure("get_checkin", (checkin_id, user_id))
         if results:
             return results[0]
         return {}

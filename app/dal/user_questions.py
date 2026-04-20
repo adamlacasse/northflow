@@ -63,6 +63,7 @@ def update_user_question(
     creds: Dict[str, Any],
     *,
     question_id: int,
+    user_id: int,
     question_text: str,
     question_type: str,
     is_active: bool,
@@ -74,6 +75,7 @@ def update_user_question(
             "update_user_question",
             (
                 question_id,
+                user_id,
                 question_text,
                 question_type,
                 int(is_active),
@@ -89,10 +91,10 @@ def update_user_question(
         db.close()
 
 
-def delete_user_question(creds: Dict[str, Any], *, question_id: int) -> None:
+def delete_user_question(creds: Dict[str, Any], *, question_id: int, user_id: int) -> None:
     db = _get_connection(creds)
     try:
-        db.call_procedure("delete_user_question", (question_id,))
+        db.call_procedure("delete_user_question", (question_id, user_id))
         db.commit()
     except Exception as exc:  # noqa: BLE001
         raise DatabaseError(str(exc)) from exc
