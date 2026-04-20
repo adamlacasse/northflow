@@ -1,6 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Check-in Detail{% endblock %}
+{% block title %}{% if checkin %}Check-in Detail{% else %}New Check-in{% endif %}{% endblock %}
 {% block content %}
+    {% if checkin %}
     <section class="card">
         <h2>Check-in Details</h2>
         <div class="details-section">
@@ -13,7 +14,8 @@
                 {{ checkin.checkin_time }}
             </p>
         </div>
-        <form method="post"
+        <form id="edit-checkin"
+              method="post"
               action="{{ url_for('main.edit_checkin', checkin_id=checkin.id) }}"
               class="form-grid">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -21,30 +23,32 @@
                 Notes
                 <textarea name="notes" rows="3">{{ checkin.notes or "" }}</textarea>
             </label>
-            <div class="form-actions">
-                <button type="submit" class="btn primary">Update Notes</button>
-                <form method="post"
-                      action="{{ url_for('main.delete_checkin_route', checkin_id=checkin.id) }}"
-                      class="form-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit"
-                            class="btn danger"
-                            onclick="return confirm('Delete this check-in and all answers?');">Delete Check-in</button>
-                </form>
-            </div>
         </form>
+        <form id="delete-checkin"
+              method="post"
+              action="{{ url_for('main.delete_checkin_route', checkin_id=checkin.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        </form>
+        <div class="form-actions">
+            <button form="edit-checkin" type="submit" class="btn primary">Update Notes</button>
+            <button form="delete-checkin"
+                    type="submit"
+                    class="btn danger"
+                    onclick="return confirm('Delete this check-in and all answers?');">Delete Check-in</button>
+        </div>
     </section>
     <section class="card">
         <h2>Answers</h2>
         {% if questions %}
             {% for q in questions %}
+                {% set answer = answers.get(q.id, {}) %}
                 <div class="question-section">
                     <h3>{{ q.question_text }}</h3>
-                    <form method="post"
+                    <form id="save-answer-{{ q.id }}"
+                          method="post"
                           action="{{ url_for('main.save_answer', checkin_id=checkin.id, question_id=q.id) }}"
                           class="form-grid">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        {% set answer = answers.get(q.id, {}) %}
                         {% if q.question_type == 'text' %}
                             <label>
                                 Your answer
@@ -79,27 +83,46 @@
                                 <span>Yes</span>
                             </label>
                         {% endif %}
-                        <div class="form-actions">
-                            <button type="submit" class="btn small primary">Save Answer</button>
-                            {% if answer %}
-                                <form method="post"
-                                      action="{{ url_for('main.delete_answer_route', checkin_id=checkin.id, question_id=q.id) }}"
-                                      class="form-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn small danger">Clear</button>
-                                </form>
-                            {% endif %}
-                        </div>
                     </form>
+                    {% if answer %}
+                        <form id="delete-answer-{{ q.id }}"
+                              method="post"
+                              action="{{ url_for('main.delete_answer_route', checkin_id=checkin.id, question_id=q.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        </form>
+                    {% endif %}
+                    <div class="form-actions">
+                        <button form="save-answer-{{ q.id }}" type="submit" class="btn small primary">Save Answer</button>
+                        {% if answer %}
+                            <button form="delete-answer-{{ q.id }}" type="submit" class="btn small danger">Clear</button>
+                        {% endif %}
+                    </div>
                 </div>
             {% endfor %}
         {% else %}
             <p class="empty-state">No questions found for this user.</p>
         {% endif %}
     </section>
+    {% else %}
+    <section class="card">
+        <h2>New Check-in</h2>
+        <form method="post"
+              action="{{ url_for('main.new_checkin') }}"
+              class="form-grid">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>
+                Notes
+                <textarea name="notes" rows="3" placeholder="Optional notes for this check-in..."></textarea>
+            </label>
+            <div class="form-actions">
+                <button type="submit" class="btn primary">Create Check-in</button>
+            </div>
+        </form>
+    </section>
+    {% endif %}
     <section class="card">
         <div class="form-actions">
-            <a href="{{ url_for("main.checkins") }}" class="btn secondary">Back to Check-ins</a>
+            <a href="{{ url_for('main.checkins') }}" class="btn secondary">Back to Check-ins</a>
         </div>
     </section>
 {% endblock %}
