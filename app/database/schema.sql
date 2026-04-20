@@ -75,10 +75,10 @@ CREATE TABLE answers (
 -- Seed Data
 -- ------------------------------------------------------------------
 
--- Bootstrap user for development
--- This single user is required for the app to function until authentication is implemented.
--- When auth is live, this should be removed and users will register themselves.
--- Note: oauth_provider and oauth_id are NULL for this legacy user (pre-OAuth)
+-- Optional demo user for local development/testing.
+-- OAuth users are normally auto-registered at first login.
+-- Do not use this demo account pattern in production.
+-- Note: oauth_provider and oauth_id are intentionally NULL for this local-only user.
 INSERT INTO users (first_name, last_name, email, oauth_provider, oauth_id)
 VALUES ('Demo', 'User', 'demo@northflow.app', NULL, NULL);
 

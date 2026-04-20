@@ -185,6 +185,76 @@ the SQL manually, you can still execute
 `schema.sql` includes stored procedures for user questions, check-ins, answers,
 daily summary reporting, plus the `health_check` routine.
 
+### Stored procedure contracts
+
+Use these signatures exactly when calling routines through the DAL:
+
+| Procedure | Required params (in order) |
+| --- | --- |
+| `health_check` | none |
+| `list_user_questions` | none |
+| `add_user_question` | `p_user_id`, `p_question_text`, `p_question_type`, `p_is_active`, `p_sort_order` |
+| `update_user_question` | `p_question_id`, `p_question_text`, `p_question_type`, `p_is_active`, `p_sort_order` |
+| `delete_user_question` | `p_question_id` |
+| `add_checkin` | `p_user_id`, `p_notes` |
+| `update_checkin` | `p_checkin_id`, `p_notes` |
+| `delete_checkin` | `p_checkin_id` |
+| `get_checkin` | `p_checkin_id` |
+| `list_checkins` | `p_user_id` |
+| `add_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score` |
+| `update_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score` |
+| `delete_answer` | `p_checkin_id`, `p_question_id` |
+| `get_checkin_answers` | `p_checkin_id` |
+| `list_daily_summary` | `p_user_id`, `p_start_date`, `p_end_date` (nullable filters; pass `NULL` when unused) |
+
+### Behavioral contracts
+
+- Use stored procedures for app data operations; raw SQL is only allowed in `app/dal/oauth_users.py`.
+- All routes require authentication except `/auth/*` and `/health`.
+- Include a CSRF token hidden input in every HTML form.
+- OAuth callbacks must set `session.permanent = True` (1-hour session lifetime).
+- Run `apply_schema_objects` before app start (for example: `MIGRATE_MODE=objects ./deploy/migrate.sh`).
+
+### Data model defaults
+
+- `user_questions.question_type` supported values: `text`, `scale_1_5`, `number`, `boolean`.
+- `answers.score` contract is `0` through `5` (enforced by app validation).
+- `user_questions.sort_order` defaults to `0`; questions display in ascending `sort_order` (ties by question ID).
+
+### Troubleshooting / runbook
+
+- **App fails at startup with `SECRET_KEY` error**
+  - Ensure `.env` includes `SECRET_KEY`, then restart:
+
+    ```bash
+    python run.py
+    ```
+
+- **`/health` returns 503 due to missing routines/views**
+  - Re-apply schema objects, then restart:
+
+    ```bash
+    MIGRATE_MODE=objects ./deploy/migrate.sh
+    python run.py
+    ```
+
+- **Database auth/connection errors**
+  - Verify DB env vars in `.env`, then rebuild local schema:
+
+    ```bash
+    invoke execute-schema
+    python run.py
+    ```
+
+- **OAuth login misconfigured (provider/client issues)**
+  - Recheck OAuth client IDs/secrets + callback URLs in `.env`, then validate locally:
+
+    ```bash
+    python run.py
+    pytest tests/
+    invoke lint
+    ```
+
 ## Running the App
 
 ```bash

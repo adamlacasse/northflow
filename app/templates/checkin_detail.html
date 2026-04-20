@@ -14,7 +14,7 @@
             </p>
         </div>
         <form method="post"
-              action="{{ url_for('main.update_checkin_route', checkin_id=checkin.id) }}"
+              action="{{ url_for('main.edit_checkin', checkin_id=checkin.id) }}"
               class="form-grid">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>
@@ -41,7 +41,7 @@
                 <div class="question-section">
                     <h3>{{ q.question_text }}</h3>
                     <form method="post"
-                          action="{{ url_for('main.save_answer_route', checkin_id=checkin.id, question_id=q.id) }}"
+                          action="{{ url_for('main.save_answer', checkin_id=checkin.id, question_id=q.id) }}"
                           class="form-grid">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         {% set answer = answers.get(q.id, {}) %}
