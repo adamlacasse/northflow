@@ -1,6 +1,6 @@
 """Input validation schemas and validators."""
 
-from marshmallow import Schema, ValidationError, fields, validate
+from marshmallow import EXCLUDE, Schema, ValidationError, fields, validate
 
 
 class QuestionSchema(Schema):
@@ -72,7 +72,9 @@ def validate_form(
     """
     schema = schema_class()
     try:
-        cleaned = schema.load(data)
+        # Silently drop keys not declared on the schema (e.g. csrf_token,
+        # submit button values) rather than failing with "Unknown field."
+        cleaned = schema.load(data, unknown=EXCLUDE)
         return True, cleaned, None
     except ValidationError as e:
         # Flatten errors into a single message
