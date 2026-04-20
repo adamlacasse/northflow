@@ -43,12 +43,12 @@ def update_checkin(
         port=creds.get("port"),
     )
     try:
-        _, updated_params = db.call_procedure(
-            "update_checkin", (checkin_id, user_id, notes, 0)
+        results, _ = db.call_procedure(
+            "update_checkin", (checkin_id, user_id, notes)
         )
         db.commit()
-        # The OUT parameter p_success is in updated_params
-        return updated_params[3] == 1
+        # Procedure returns a single row with a `success` column (1 or 0)
+        return bool(results[0]["success"]) if results else False
     finally:
         db.close()
 

@@ -256,15 +256,14 @@ END$$
 CREATE PROCEDURE update_checkin (
     IN p_checkin_id INT,
     IN p_user_id INT,
-    IN p_notes TEXT,
-    OUT p_success TINYINT(1)
+    IN p_notes TEXT
 )
 BEGIN
     UPDATE checkins
     SET notes = p_notes
     WHERE id = p_checkin_id AND user_id = p_user_id;
 
-    SET p_success = (ROW_COUNT() > 0);
+    SELECT (ROW_COUNT() > 0) AS success;
 END$$
 
 CREATE PROCEDURE delete_checkin (
