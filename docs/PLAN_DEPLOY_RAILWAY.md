@@ -205,7 +205,7 @@ This lets the env var override the default while keeping local dev unchanged.
 ## Step 8: Custom Domain (Cloudflare)
 
 1. In Railway, go to the web service → **Settings** → **Networking** →
-   **Custom Domain** → enter your domain (e.g., `app.adamlacasse.dev`)
+   **Custom Domain** → enter your domain (e.g., `northflow.adamlacasse.dev`)
 2. Railway gives you a CNAME target (e.g., `your-service.up.railway.app`)
 3. In Cloudflare DNS, add:
 
@@ -222,11 +222,11 @@ After the custom domain is live:
 
 1. **Google Cloud Console** → APIs & Services → Credentials →
    your OAuth client → add authorized redirect URI:
-   `https://app.adamlacasse.dev/auth/callback/google`
+   `https://northflow.adamlacasse.dev/auth/callback/google`
 
 2. **GitHub Developer Settings** → OAuth Apps → your app →
    update callback URL:
-   `https://app.adamlacasse.dev/auth/callback/github`
+   `https://northflow.adamlacasse.dev/auth/callback/github`
 
 ---
 
@@ -234,7 +234,7 @@ After the custom domain is live:
 
 After deployment, confirm:
 
-- [ ] `https://app.adamlacasse.dev/health` returns 200
+- [ ] `https://northflow.adamlacasse.dev/health` returns 200
 - [ ] Google OAuth login works end-to-end
 - [ ] GitHub OAuth login works end-to-end
 - [ ] Creating a question, check-in, and answer all succeed
