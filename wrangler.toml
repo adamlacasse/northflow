@@ -1,0 +1,12 @@
+name = "app-warmup"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+ORIGIN_URL = "https://northflow-app-production.up.railway.app"
+HEALTH_PATH = "/health"
+COLD_TIMEOUT_MS = "2500"
+
+[[routes]]
+pattern = "northflow.adamlacasse.dev/*"
+zone_name = "adamlacasse.dev"
