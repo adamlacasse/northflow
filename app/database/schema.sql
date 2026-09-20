@@ -102,6 +102,7 @@ LEFT JOIN checkins AS c
     ON u.id = c.user_id
 LEFT JOIN answers AS a
     ON c.id = a.checkin_id
+WHERE c.id IS NOT NULL
 GROUP BY
     u.id,
     u.first_name,
@@ -118,18 +119,9 @@ BEGIN
     SELECT 1 AS status;
 END$$
 
-CREATE PROCEDURE list_users ()
-BEGIN
-    SELECT
-        id,
-        first_name,
-        last_name,
-        email
-    FROM users
-    ORDER BY last_name, first_name;
-END$$
-
-CREATE PROCEDURE list_user_questions ()
+CREATE PROCEDURE list_user_questions (
+    IN p_user_id INT
+)
 BEGIN
     SELECT
         uq.id,
@@ -141,6 +133,7 @@ BEGIN
         uq.sort_order
     FROM user_questions AS uq
     JOIN users AS u ON u.id = uq.user_id
+    WHERE uq.user_id = p_user_id
     ORDER BY u.last_name, u.first_name, uq.sort_order, uq.id;
 END$$
 
@@ -314,24 +307,37 @@ CREATE PROCEDURE add_answer (
     IN p_checkin_id INT,
     IN p_question_id INT,
     IN p_answer_text TEXT,
-    IN p_score DECIMAL(5, 2)
+    IN p_score DECIMAL(5, 2),
+    IN p_user_id INT,
+    OUT p_success TINYINT(1)
 )
 BEGIN
-    INSERT INTO answers (
-        checkin_id,
-        question_id,
-        answer_text,
-        score
-    )
-    VALUES (
-        p_checkin_id,
-        p_question_id,
-        p_answer_text,
-        p_score
-    )
-    ON DUPLICATE KEY UPDATE
-        answer_text = p_answer_text,
-        score = p_score;
+    IF EXISTS (
+        SELECT 1 FROM checkins
+        WHERE id = p_checkin_id AND user_id = p_user_id
+    ) AND EXISTS (
+        SELECT 1 FROM user_questions
+        WHERE id = p_question_id AND user_id = p_user_id
+    ) THEN
+        INSERT INTO answers (
+            checkin_id,
+            question_id,
+            answer_text,
+            score
+        )
+        VALUES (
+            p_checkin_id,
+            p_question_id,
+            p_answer_text,
+            p_score
+        )
+        ON DUPLICATE KEY UPDATE
+            answer_text = p_answer_text,
+            score = p_score;
+        SET p_success = 1;
+    ELSE
+        SET p_success = 0;
+    END IF;
 END$$
 
 CREATE PROCEDURE update_answer (
@@ -339,33 +345,55 @@ CREATE PROCEDURE update_answer (
     IN p_question_id INT,
     IN p_answer_text TEXT,
     IN p_score DECIMAL(5, 2),
+    IN p_user_id INT,
     OUT p_success TINYINT(1)
 )
 BEGIN
-    UPDATE answers
+    UPDATE answers AS a
     SET
-        answer_text = p_answer_text,
-        score = p_score
+        a.answer_text = p_answer_text,
+        a.score = p_score
     WHERE
-        checkin_id = p_checkin_id
-        AND question_id = p_question_id;
+        a.checkin_id = p_checkin_id
+        AND a.question_id = p_question_id
+        AND EXISTS (
+            SELECT 1 FROM checkins AS c
+            WHERE c.id = a.checkin_id AND c.user_id = p_user_id
+        )
+        AND EXISTS (
+            SELECT 1 FROM user_questions AS uq
+            WHERE uq.id = a.question_id AND uq.user_id = p_user_id
+        );
 
     SET p_success = (ROW_COUNT() > 0);
 END$$
 
 CREATE PROCEDURE delete_answer (
     IN p_checkin_id INT,
-    IN p_question_id INT
+    IN p_question_id INT,
+    IN p_user_id INT,
+    OUT p_success TINYINT(1)
 )
 BEGIN
-    DELETE FROM answers
+    DELETE a FROM answers AS a
     WHERE
-        checkin_id = p_checkin_id
-        AND question_id = p_question_id;
+        a.checkin_id = p_checkin_id
+        AND a.question_id = p_question_id
+        AND EXISTS (
+            SELECT 1 FROM checkins AS c
+            WHERE c.id = a.checkin_id AND c.user_id = p_user_id
+        )
+        AND EXISTS (
+            SELECT 1 FROM user_questions AS uq
+            WHERE uq.id = a.question_id AND uq.user_id = p_user_id
+        );
+
+    SET p_success = (ROW_COUNT() > 0);
 END$$
 
 CREATE PROCEDURE get_checkin_answers (
-    IN p_checkin_id INT
+    IN p_checkin_id INT,
+    IN p_user_id INT
 )
 BEGIN
     SELECT
@@ -377,7 +405,9 @@ BEGIN
         a.score
     FROM answers AS a
     JOIN user_questions AS uq ON uq.id = a.question_id
+    JOIN checkins AS c ON c.id = a.checkin_id
     WHERE a.checkin_id = p_checkin_id
+        AND c.user_id = p_user_id
     ORDER BY uq.sort_order, uq.id;
 END$$
 

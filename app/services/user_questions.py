@@ -11,19 +11,12 @@ from app.dal.user_questions import (
     list_user_questions as dal_list_user_questions,
 )
 from app.dal.user_questions import (
-    list_users as dal_list_users,
-)
-from app.dal.user_questions import (
     update_user_question as dal_update_user_question,
 )
 
 
-def list_users(creds: Dict[str, Any]) -> List[Dict[str, Any]]:
-    return dal_list_users(creds)
-
-
-def list_user_questions(creds: Dict[str, Any]) -> List[Dict[str, Any]]:
-    return dal_list_user_questions(creds)
+def list_user_questions(creds: Dict[str, Any], *, user_id: int) -> List[Dict[str, Any]]:
+    return dal_list_user_questions(creds, user_id=user_id)
 
 
 def create_user_question(

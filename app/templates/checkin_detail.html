@@ -76,10 +76,20 @@
                             </label>
                         {% elif q.question_type == 'boolean' %}
                             <label class="checkbox-label">
+                                {#
+                                  Checkbox is listed before the hidden fallback.
+                                  Flask/Werkzeug's MultiDict.to_dict(flat=True)
+                                  (used by request.form.to_dict()) keeps the
+                                  FIRST value for a repeated key, not the last,
+                                  so when checked the "1" from the checkbox
+                                  wins over the hidden "0"; when unchecked only
+                                  the hidden "0" is submitted at all.
+                                #}
                                 <input type="checkbox"
                                        name="answer_text"
                                        value="1"
                                        {% if answer.get('answer_text') == "1" %}checked{% endif %}>
+                                <input type="hidden" name="answer_text" value="0">
                                 <span>Yes</span>
                             </label>
                         {% endif %}
