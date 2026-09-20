@@ -34,7 +34,7 @@
             <button form="delete-checkin"
                     type="submit"
                     class="btn danger"
-                    onclick="return confirm('Delete this check-in and all answers?');">Delete Check-in</button>
+                    data-confirm="Delete this check-in and all answers?">Delete Check-in</button>
         </div>
     </section>
     <section class="card">
@@ -94,7 +94,10 @@
                     <div class="form-actions">
                         <button form="save-answer-{{ q.id }}" type="submit" class="btn small primary">Save Answer</button>
                         {% if answer %}
-                            <button form="delete-answer-{{ q.id }}" type="submit" class="btn small danger">Clear</button>
+                            <button form="delete-answer-{{ q.id }}"
+                                    type="submit"
+                                    class="btn small danger"
+                                    data-confirm="Clear this answer?">Clear</button>
                         {% endif %}
                     </div>
                 </div>

@@ -48,7 +48,7 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit"
                                                 class="btn small danger"
-                                                onclick="return confirm('Delete this check-in and all answers?');">
+                                                data-confirm="Delete this check-in and all answers?">
                                             Delete
                                         </button>
                                     </form>
