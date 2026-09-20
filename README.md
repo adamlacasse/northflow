@@ -133,6 +133,11 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 
 # Environment
 FLASK_ENV=development
+
+# Production only: public hostname(s) the Cloudflare Worker fronts, comma-separated.
+# Railway overwrites X-Forwarded-Host, so the Worker sends the browser-facing host in
+# X-Northflow-Host and Flask honors it only for hosts listed here.
+# PUBLIC_HOSTS=northflow.adamlacasse.dev
 ```
 
 **⚠️ Important**:

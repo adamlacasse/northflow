@@ -9,6 +9,7 @@ from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.auth import init_oauth
+from app.middleware import PublicHostMiddleware, parse_allowed_hosts
 
 csrf = CSRFProtect()
 limiter = Limiter(key_func=get_remote_address)
@@ -24,15 +25,24 @@ def create_app(config_name=None):
         Flask application instance
     """
     app = Flask(__name__)
-    # Trust the first reverse proxy for scheme/host so external URLs,
-    # including OAuth callbacks, are generated correctly behind Railway.
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_proto=1)
 
     # Load configuration
     from config import config
 
     selected_config = config_name or os.getenv("FLASK_ENV", "production")
     app.config.from_object(config.get(selected_config, config["default"]))
+
+    # Behind the Cloudflare Worker, Railway rewrites X-Forwarded-Host to its
+    # own hostname, so the public host arrives in a private header instead.
+    # Honor it only for allowlisted hosts (PUBLIC_HOSTS). This wraps the app
+    # first so it runs after ProxyFix and has the final say on the host.
+    app.wsgi_app = PublicHostMiddleware(
+        app.wsgi_app, parse_allowed_hosts(app.config.get("PUBLIC_HOSTS"))
+    )
+    # Trust the first reverse proxy for the scheme so generated URLs are
+    # https behind Railway. x_host is deliberately off: Railway overwrites
+    # that header with the wrong value (see app/middleware.py).
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
 
     # Initialize CSRF protection
     csrf.init_app(app)
