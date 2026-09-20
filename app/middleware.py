@@ -17,11 +17,26 @@ OAuth redirect to an attacker-chosen domain.
 PUBLIC_HOST_HEADER = "X-Northflow-Host"
 
 
+def _normalize_host(entry):
+    """Reduce one ``PUBLIC_HOSTS`` entry to a bare ``host[:port]``.
+
+    Tolerates the ways a hostname tends to get pasted into a dashboard:
+    surrounding whitespace, a ``https://`` scheme, a trailing slash or path,
+    and mixed case.
+    """
+    entry = entry.strip()
+    if "://" in entry:
+        entry = entry.split("://", 1)[1]
+    entry = entry.split("/", 1)[0]
+    return entry.lower()
+
+
 def parse_allowed_hosts(value):
     """Turn a comma-separated ``PUBLIC_HOSTS`` setting into a set of hosts."""
     if not value:
         return frozenset()
-    return frozenset(host.strip().lower() for host in value.split(",") if host.strip())
+    hosts = (_normalize_host(entry) for entry in value.split(","))
+    return frozenset(host for host in hosts if host)
 
 
 class PublicHostMiddleware:

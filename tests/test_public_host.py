@@ -35,6 +35,14 @@ def test_parse_allowed_hosts_normalizes():
     assert parse_allowed_hosts(None) == frozenset()
 
 
+def test_parse_allowed_hosts_tolerates_scheme_and_path():
+    parsed = parse_allowed_hosts(
+        "https://northflow.example/, http://other.example:8443/auth/callback"
+    )
+    assert parsed == {"northflow.example", "other.example:8443"}
+    assert parse_allowed_hosts("https://") == frozenset()
+
+
 def test_allowlisted_public_host_is_used_for_external_urls(monkeypatch):
     client = _app_with_public_hosts(monkeypatch, "northflow.example")
 

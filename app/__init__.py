@@ -9,7 +9,11 @@ from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.auth import init_oauth
-from app.middleware import PublicHostMiddleware, parse_allowed_hosts
+from app.middleware import (
+    PUBLIC_HOST_HEADER,
+    PublicHostMiddleware,
+    parse_allowed_hosts,
+)
 
 csrf = CSRFProtect()
 limiter = Limiter(key_func=get_remote_address)
@@ -36,9 +40,24 @@ def create_app(config_name=None):
     # own hostname, so the public host arrives in a private header instead.
     # Honor it only for allowlisted hosts (PUBLIC_HOSTS). This wraps the app
     # first so it runs after ProxyFix and has the final say on the host.
-    app.wsgi_app = PublicHostMiddleware(
-        app.wsgi_app, parse_allowed_hosts(app.config.get("PUBLIC_HOSTS"))
-    )
+    public_hosts = parse_allowed_hosts(app.config.get("PUBLIC_HOSTS"))
+    app.wsgi_app = PublicHostMiddleware(app.wsgi_app, public_hosts)
+    # Logged at WARNING on purpose: the app configures no log levels, so
+    # INFO is dropped in production and this line would never reach the
+    # Railway deploy logs, where it is the one place to confirm the
+    # allowlist the running container actually loaded.
+    if public_hosts:
+        app.logger.warning(
+            "Public host allowlist active for %s: %s",
+            PUBLIC_HOST_HEADER,
+            ", ".join(sorted(public_hosts)),
+        )
+    else:
+        app.logger.warning(
+            "PUBLIC_HOSTS is empty; %s header will be ignored, so external "
+            "URLs use whatever host the proxy presents",
+            PUBLIC_HOST_HEADER,
+        )
     # Trust the first reverse proxy for the scheme so generated URLs are
     # https behind Railway. x_host is deliberately off: Railway overwrites
     # that header with the wrong value (see app/middleware.py).
