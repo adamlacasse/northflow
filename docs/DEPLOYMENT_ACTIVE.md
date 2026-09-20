@@ -28,6 +28,14 @@ NorthFlow is deployed on Railway (or run locally via Docker Compose).
 - **DNS:** Cloudflare CNAME pointing to Railway's domain
 - **Local development:** Docker Compose (`docker-compose.yml`) or direct `python run.py`
 
+> **Gap (unverified):** the repository also contains a Cloudflare Worker
+> (`worker.js`, `wrangler.toml`) configured to front `northflow.adamlacasse.dev/*`
+> with a cold-start loading shell. Whether it is deployed, and whether the
+> hostname is proxied (which a Worker route requires) or DNS-only (which the DNS
+> bullet above and `PLAN_DEPLOY_RAILWAY.md` both state), has not been confirmed.
+> Until it is, treat this section as describing the Railway side only. See
+> [../TODO.md](../TODO.md) item **P3-2**.
+
 ---
 
 ## 3. Database Migration Contract (Critical)
