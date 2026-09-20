@@ -85,23 +85,9 @@ that added each item; re-locate by symbol name if they have drifted.
   procedure the app actually uses), or document why the procedure is retained.
   **Done when:** no unreferenced data-access path remains, and `invoke lint` passes.
 
-- [ ] **P1-5: Replace or remove placeholder JS.** `app/static/js/main.js` contains only
-  `console.log` statements. Either give it real behavior (for example the delete-confirm
-  handlers currently written inline in templates) or delete the file and its `base.html`
-  include.
-  **Done when:** no placeholder logging ships to the browser.
-
 ---
 
 ## P2 — Testing and CI
-
-- [ ] **P2-1: Add a CI workflow.** `.github/` contains only `copilot-instructions.md`;
-  there is no GitHub Actions workflow, so lint and tests only run when someone remembers.
-  Add `.github/workflows/ci.yml` running `ruff check`, `sqlfluff lint --dialect mysql
-  app/database/`, `djlint --lint app/templates/`, `pymarkdown scan .`, and `pytest` on
-  push and pull request. Use a MySQL service container (or the DB-free suite from P2-2)
-  so tests can actually run.
-  **Done when:** a pull request shows passing lint and test checks.
 
 - [ ] **P2-2: Add tests that do not require a live MySQL.** Both existing test files
   (`tests/test_connection.py`, `tests/test_sql_injection.py`) need a reachable database,
