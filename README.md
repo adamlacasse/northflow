@@ -3,7 +3,8 @@
 A mindfulness/gratitude check-in app, created as the final project for
 CSC-6302 Database Principles
 
-> **Note for AI agents:** See [TODO.md](TODO.md) for open questions and code/doc alignment tasks.
+> **Note for AI agents:** See [TODO.md](TODO.md) for the definitive backlog — open
+> security fixes, correctness bugs, testing/CI gaps, and code/doc alignment tasks.
 
 ## Overview
 

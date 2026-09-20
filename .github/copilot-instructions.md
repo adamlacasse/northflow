@@ -1,5 +1,10 @@
 # NorthFlow - AI Coding Agent Instructions
 
+> **Open work:** [TODO.md](../TODO.md) is the definitive backlog — read it before
+> starting anything. Parts of this file have drifted from the code (route paths,
+> OAuth providers, table list); the known-stale sections are catalogued in TODO
+> item **P3-4**. Trust the code over this file where they disagree.
+
 ## Project Overview
 
 NorthFlow is a Flask-based mindfulness/gratitude check-in app built as the first MVP for a CSC-6302 Database Principles course project. The project emphasizes a clean DAL pattern, multi-dialect linting, and environment-based configuration.
