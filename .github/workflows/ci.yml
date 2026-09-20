@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint Python (ruff)
+        run: ruff check .
+
+      - name: Lint SQL (sqlfluff)
+        run: sqlfluff lint --dialect mysql app/database/
+
+      - name: Lint templates (djlint)
+        run: djlint --lint app/templates/
+
+      - name: Lint Markdown (pymarkdown)
+        run: pymarkdown scan .
+
+      - name: Run tests
+        run: pytest -m "not integration"
