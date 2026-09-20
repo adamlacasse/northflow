@@ -13,19 +13,10 @@ def _get_connection(creds: Dict[str, Any]) -> DatabaseConnection:
     )
 
 
-def list_users(creds: Dict[str, Any]) -> List[Dict[str, Any]]:
+def list_user_questions(creds: Dict[str, Any], *, user_id: int) -> List[Dict[str, Any]]:
     db = _get_connection(creds)
     try:
-        results, _ = db.call_procedure("list_users")
-        return results
-    finally:
-        db.close()
-
-
-def list_user_questions(creds: Dict[str, Any]) -> List[Dict[str, Any]]:
-    db = _get_connection(creds)
-    try:
-        results, _ = db.call_procedure("list_user_questions")
+        results, _ = db.call_procedure("list_user_questions", (user_id,))
         return results
     finally:
         db.close()
@@ -91,7 +82,9 @@ def update_user_question(
         db.close()
 
 
-def delete_user_question(creds: Dict[str, Any], *, question_id: int, user_id: int) -> None:
+def delete_user_question(
+    creds: Dict[str, Any], *, question_id: int, user_id: int
+) -> None:
     db = _get_connection(creds)
     try:
         db.call_procedure("delete_user_question", (question_id, user_id))

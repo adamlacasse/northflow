@@ -89,9 +89,7 @@ def questions():
     try:
         creds = _db_creds()
         current_user_id = _get_current_user()
-        questions = list_user_questions(creds)
-        # Filter to only show current user's questions
-        my_questions = [q for q in questions if q["user_id"] == current_user_id]
+        my_questions = list_user_questions(creds, user_id=current_user_id)
         return render_template("questions.html", questions=my_questions)
     except DatabaseError as exc:
         logger.error(f"Database error loading questions: {exc}", exc_info=True)
@@ -195,14 +193,17 @@ def checkin_detail(checkin_id: int):
         creds = _db_creds()
         current_user_id = _get_current_user()
         checkin = get_checkin(creds, checkin_id=checkin_id, user_id=current_user_id)
-        answers_list = get_checkin_answers(creds, checkin_id=checkin_id)
+        if not checkin:
+            flash("Check-in not found.", "danger")
+            return redirect(url_for("main.checkins"))
+
+        answers_list = get_checkin_answers(
+            creds, checkin_id=checkin_id, user_id=current_user_id
+        )
         # Template expects a dict keyed by question_id for O(1) lookup
         answers = {a["question_id"]: a for a in answers_list}
-        all_questions = list_user_questions(creds)
-        my_questions = [
-            q for q in all_questions
-            if q["user_id"] == current_user_id and q["is_active"]
-        ]
+        all_questions = list_user_questions(creds, user_id=current_user_id)
+        my_questions = [q for q in all_questions if q["is_active"]]
         return render_template(
             CHECKIN_DETAIL,
             checkin=checkin,
@@ -238,7 +239,10 @@ def edit_checkin(checkin_id: int):
         if updated:
             flash("Check-in updated.", "success")
         else:
-            flash("Check-in not found or you don't have permission to edit it.", "danger")
+            flash(
+                "Check-in not found or you don't have permission to edit it.",
+                "danger",
+            )
     except DatabaseError as exc:
         logger.error(f"Database error updating checkin: {exc}", exc_info=True)
         flash("Unable to update check-in. Please try again.", "danger")
@@ -320,7 +324,10 @@ def edit_question(question_id: int):
         if updated:
             flash("Question updated.", "success")
         else:
-            flash("Question not found or you don't have permission to edit it.", "danger")
+            flash(
+                "Question not found or you don't have permission to edit it.",
+                "danger",
+            )
     except DatabaseError as exc:
         logger.error(f"Database error updating question: {exc}", exc_info=True)
         flash("Unable to update question. Please try again.", "danger")
@@ -360,14 +367,22 @@ def save_answer(checkin_id: int, question_id: int):
         return redirect(url_for(MAIN_CHECKIN_DETAIL, checkin_id=checkin_id))
 
     try:
-        add_answer(
+        current_user_id = _get_current_user()
+        saved = add_answer(
             _db_creds(),
             checkin_id=checkin_id,
             question_id=question_id,
+            user_id=current_user_id,
             answer_text=cleaned.get("answer_text"),
             score=cleaned.get("score"),
         )
-        flash("Answer saved.", "success")
+        if saved:
+            flash("Answer saved.", "success")
+        else:
+            flash(
+                "Check-in or question not found, or you don't have permission.",
+                "danger",
+            )
     except DatabaseError as exc:
         logger.error(f"Database error saving answer: {exc}", exc_info=True)
         flash("Unable to save answer. Please try again.", "danger")
@@ -382,12 +397,20 @@ def save_answer(checkin_id: int, question_id: int):
 @login_required
 def delete_answer_route(checkin_id: int, question_id: int):
     try:
-        delete_answer(
+        current_user_id = _get_current_user()
+        deleted = delete_answer(
             _db_creds(),
             checkin_id=checkin_id,
             question_id=question_id,
+            user_id=current_user_id,
         )
-        flash("Answer deleted.", "info")
+        if deleted:
+            flash("Answer deleted.", "info")
+        else:
+            flash(
+                "Answer not found, or you don't have permission to delete it.",
+                "danger",
+            )
     except DatabaseError as exc:
         logger.error(f"Database error deleting answer: {exc}", exc_info=True)
         flash("Unable to delete answer. Please try again.", "danger")

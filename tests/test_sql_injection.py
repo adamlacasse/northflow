@@ -6,12 +6,16 @@ SQL injection attacks by using parameterized queries and stored procedures.
 
 import os
 
+import pytest
 from dotenv import load_dotenv
 
 from app.dal import DatabaseConnection, DatabaseError
 
 # Load environment variables before importing app
 load_dotenv()
+
+# These tests exercise stored procedures against a live MySQL instance.
+pytestmark = pytest.mark.integration
 
 
 def test_stored_procedure_with_malicious_input():
@@ -27,7 +31,7 @@ def test_stored_procedure_with_malicious_input():
     db = DatabaseConnection(**creds)
     try:
         # Test stored procedures safely handle SQL injection attempts
-        results, _ = db.call_procedure("list_user_questions", ())
+        results, _ = db.call_procedure("list_user_questions", (1,))
         # If this doesn't raise an error and returns valid data,
         # the stored procedure safely handles the parameter
         assert isinstance(results, list), "Stored procedure returned invalid result"
@@ -151,7 +155,7 @@ def test_owasp_sql_injection_payloads():
             # Stored procedures will treat them as literal string values
             try:
                 # All payloads should be safely bound as parameters
-                results, _ = db.call_procedure("list_users", ())
+                results, _ = db.call_procedure("list_user_questions", (payload,))
                 assert isinstance(results, list)
             except DatabaseError:
                 # If stored procedure rejects the payload, that's also fine

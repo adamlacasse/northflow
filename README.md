@@ -193,7 +193,7 @@ Use these signatures exactly when calling routines through the DAL:
 | Procedure | Required params (in order) |
 | --- | --- |
 | `health_check` | none |
-| `list_user_questions` | none |
+| `list_user_questions` | `p_user_id` |
 | `add_user_question` | `p_user_id`, `p_question_text`, `p_question_type`, `p_is_active`, `p_sort_order` |
 | `update_user_question` | `p_question_id`, `p_user_id`, `p_question_text`, `p_question_type`, `p_is_active`, `p_sort_order`, OUT `p_success` |
 | `delete_user_question` | `p_question_id`, `p_user_id` |
@@ -202,11 +202,15 @@ Use these signatures exactly when calling routines through the DAL:
 | `delete_checkin` | `p_checkin_id`, `p_user_id` |
 | `get_checkin` | `p_checkin_id`, `p_user_id` |
 | `list_checkins` | `p_user_id` |
-| `add_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score` |
-| `update_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score` |
-| `delete_answer` | `p_checkin_id`, `p_question_id` |
-| `get_checkin_answers` | `p_checkin_id` |
+| `add_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score`, `p_user_id`, OUT `p_success` (checkin and question must both be owned by `p_user_id`) |
+| `update_answer` | `p_checkin_id`, `p_question_id`, `p_answer_text`, `p_score`, `p_user_id`, OUT `p_success` (checkin and question must both be owned by `p_user_id`) |
+| `delete_answer` | `p_checkin_id`, `p_question_id`, `p_user_id`, OUT `p_success` (checkin and question must both be owned by `p_user_id`) |
+| `get_checkin_answers` | `p_checkin_id`, `p_user_id` (scoped to check-ins owned by `p_user_id`) |
 | `list_daily_summary` | `p_user_id`, `p_start_date`, `p_end_date` (nullable filters; pass `NULL` when unused) |
+
+`list_users` has been removed; it was unused by the app (the app always
+scopes queries to `session['user_id']`). Use `list_user_questions` (with
+`p_user_id`) or `get_checkin`/`list_checkins` for user-scoped lookups.
 
 ### Behavioral contracts
 
@@ -221,6 +225,17 @@ Use these signatures exactly when calling routines through the DAL:
 - `user_questions.question_type` supported values: `text`, `scale_1_5`, `number`, `boolean`.
 - `answers.score` contract is `0` through `5` (enforced by app validation).
 - `user_questions.sort_order` defaults to `0`; questions display in ascending `sort_order` (ties by question ID).
+- `answers.answer_text` holds free-form text, `number`-type responses (stored
+  as their string representation), and `boolean`-type responses (`"0"` or
+  `"1"`, distinguishing "No" from "unanswered").
+- **`number`-type answers are intentionally excluded from `answers.score`,
+  and therefore from the `avg_score`/`min_score`/`max_score` aggregates in
+  the `user_daily_summary` view.** A numeric answer (e.g. "how many hours
+  did you sleep?") is arbitrary-range and does not fit the 1-5 `score`
+  scale that `scale_1_5` questions use, and the app deliberately does not
+  force it into that capped column. If you need numeric answers reflected
+  in aggregate reporting, do so with a dedicated query/view rather than by
+  overloading `score`.
 
 ### Troubleshooting / runbook
 

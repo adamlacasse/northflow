@@ -11,6 +11,8 @@ from app.dal import DatabaseConnection, DatabaseError
 # Load environment variables from .env file
 load_dotenv()
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="module")
 def db_connection():

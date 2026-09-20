@@ -9,10 +9,15 @@ def add_answer(
     creds: Dict[str, Any],
     checkin_id: int,
     question_id: int,
+    user_id: int,
     answer_text: Optional[str] = None,
     score: Optional[float] = None,
-) -> None:
-    """Add or update an answer to a question in a check-in."""
+) -> bool:
+    """Add or update an answer to a question in a check-in.
+
+    Returns True if the write succeeded (the check-in and question are both
+    owned by user_id); False if not (no rows are changed in that case).
+    """
     db = DatabaseConnection(
         host=creds.get("host"),
         user=creds.get("user"),
@@ -21,11 +26,13 @@ def add_answer(
         port=creds.get("port"),
     )
     try:
-        db.call_procedure(
+        _, updated_params = db.call_procedure(
             "add_answer",
-            (checkin_id, question_id, answer_text, score),
+            (checkin_id, question_id, answer_text, score, user_id, 0),
         )
         db.commit()
+        # The OUT parameter p_success is the last entry in updated_params
+        return updated_params[-1] == 1
     finally:
         db.close()
 
@@ -34,6 +41,7 @@ def update_answer(
     creds: Dict[str, Any],
     checkin_id: int,
     question_id: int,
+    user_id: int,
     answer_text: Optional[str] = None,
     score: Optional[float] = None,
 ) -> bool:
@@ -48,10 +56,11 @@ def update_answer(
     try:
         _, updated_params = db.call_procedure(
             "update_answer",
-            (checkin_id, question_id, answer_text, score, 0),
+            (checkin_id, question_id, answer_text, score, user_id, 0),
         )
-        # The OUT parameter p_success is in updated_params
-        return updated_params[4] == 1
+        db.commit()
+        # The OUT parameter p_success is the last entry in updated_params
+        return updated_params[-1] == 1
     finally:
         db.close()
 
@@ -60,8 +69,13 @@ def delete_answer(
     creds: Dict[str, Any],
     checkin_id: int,
     question_id: int,
-) -> None:
-    """Delete an answer from a check-in."""
+    user_id: int,
+) -> bool:
+    """Delete an answer from a check-in owned by user_id.
+
+    Returns True if a row was deleted; False if no matching, owned answer
+    existed (no rows are changed in that case).
+    """
     db = DatabaseConnection(
         host=creds.get("host"),
         user=creds.get("user"),
@@ -70,8 +84,11 @@ def delete_answer(
         port=creds.get("port"),
     )
     try:
-        db.call_procedure("delete_answer", (checkin_id, question_id))
+        _, updated_params = db.call_procedure(
+            "delete_answer", (checkin_id, question_id, user_id, 0)
+        )
         db.commit()
+        return updated_params[-1] == 1
     finally:
         db.close()
 
@@ -79,8 +96,9 @@ def delete_answer(
 def get_checkin_answers(
     creds: Dict[str, Any],
     checkin_id: int,
+    user_id: int,
 ) -> List[Dict[str, Any]]:
-    """Get all answers for a specific check-in."""
+    """Get all answers for a specific check-in owned by user_id."""
     db = DatabaseConnection(
         host=creds.get("host"),
         user=creds.get("user"),
@@ -89,7 +107,9 @@ def get_checkin_answers(
         port=creds.get("port"),
     )
     try:
-        results, _ = db.call_procedure("get_checkin_answers", (checkin_id,))
+        results, _ = db.call_procedure(
+            "get_checkin_answers", (checkin_id, user_id)
+        )
         return results
     finally:
         db.close()

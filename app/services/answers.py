@@ -22,15 +22,21 @@ def add_answer(
     *,
     checkin_id: int,
     question_id: int,
+    user_id: int,
     answer_text: Optional[str] = None,
     score: Optional[float] = None,
-) -> None:
-    """Add or update an answer to a question in a check-in."""
+) -> bool:
+    """Add or update an answer to a question in a check-in.
+
+    Returns True if the write succeeded (checkin and question owned by
+    user_id); False otherwise.
+    """
     try:
-        dal_add_answer(
+        return dal_add_answer(
             creds,
             checkin_id=checkin_id,
             question_id=question_id,
+            user_id=user_id,
             answer_text=answer_text,
             score=score,
         )
@@ -43,6 +49,7 @@ def update_answer(
     *,
     checkin_id: int,
     question_id: int,
+    user_id: int,
     answer_text: Optional[str] = None,
     score: Optional[float] = None,
 ) -> bool:
@@ -52,6 +59,7 @@ def update_answer(
             creds,
             checkin_id=checkin_id,
             question_id=question_id,
+            user_id=user_id,
             answer_text=answer_text,
             score=score,
         )
@@ -64,13 +72,18 @@ def delete_answer(
     *,
     checkin_id: int,
     question_id: int,
-) -> None:
-    """Delete an answer from a check-in."""
+    user_id: int,
+) -> bool:
+    """Delete an answer from a check-in owned by user_id.
+
+    Returns True if a row was deleted; False otherwise.
+    """
     try:
-        dal_delete_answer(
+        return dal_delete_answer(
             creds,
             checkin_id=checkin_id,
             question_id=question_id,
+            user_id=user_id,
         )
     except Exception as exc:  # noqa: BLE001
         raise DatabaseError(str(exc)) from exc
@@ -80,9 +93,12 @@ def get_checkin_answers(
     creds: Dict[str, Any],
     *,
     checkin_id: int,
+    user_id: int,
 ) -> List[Dict[str, Any]]:
-    """Get all answers for a specific check-in."""
+    """Get all answers for a specific check-in owned by user_id."""
     try:
-        return dal_get_checkin_answers(creds, checkin_id=checkin_id)
+        return dal_get_checkin_answers(
+            creds, checkin_id=checkin_id, user_id=user_id
+        )
     except Exception as exc:  # noqa: BLE001
         raise DatabaseError(str(exc)) from exc

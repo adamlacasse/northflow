@@ -92,7 +92,10 @@
                             </td>
                             <td class="actions">
                                 <button form="update-{{ q.id }}" type="submit" class="btn">Update</button>
-                                <button form="delete-{{ q.id }}" type="submit" class="btn danger">Delete</button>
+                                <button form="delete-{{ q.id }}"
+                                        type="submit"
+                                        class="btn danger"
+                                        data-confirm="Delete this question?">Delete</button>
                             </td>
                         </tr>
                     {% endfor %}
