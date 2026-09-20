@@ -36,6 +36,29 @@ NorthFlow is deployed on Railway (or run locally via Docker Compose).
 > Until it is, treat this section as describing the Railway side only. See
 > [../TODO.md](../TODO.md) item **P3-2**.
 
+### 2.1 Public hostname behind the Worker (Required)
+
+The Worker fetches the Railway origin URL, so Railway sees its own hostname in
+`Host`, and Railway's edge proxy **overwrites `X-Forwarded-Host`** with that
+same hostname (confirmed 2026-09-20: a request to the Railway domain with a
+spoofed `X-Forwarded-Host` still produced a Railway-domain OAuth
+`redirect_uri`). Flask therefore cannot learn the public domain from the
+standard headers, and without help it builds OAuth callbacks on
+`*.up.railway.app`, which Google rejects with `redirect_uri_mismatch`.
+
+The fix has two halves that must both be deployed:
+
+- `worker.js` sends the browser-facing host in the private header
+  `X-Northflow-Host`.
+- Flask (`app/middleware.py`) copies that header into the request host, but
+  **only** if the value appears in the `PUBLIC_HOSTS` environment variable
+  (comma-separated). Set `PUBLIC_HOSTS=northflow.adamlacasse.dev` on the
+  Railway web service. An empty value disables the header entirely.
+
+The allowlist is a security control, not a convenience: the Railway hostname is
+publicly reachable, and an unvalidated host header would let anyone steer the
+OAuth redirect to a domain they control.
+
 ---
 
 ## 3. Database Migration Contract (Critical)

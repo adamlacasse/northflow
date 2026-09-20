@@ -33,6 +33,12 @@ class Config:
     DEBUG = False
     TESTING = False
 
+    # Public hostnames the Cloudflare Worker may assert via X-Northflow-Host
+    # (comma-separated). Railway overwrites X-Forwarded-Host, so this is how
+    # Flask learns the browser-facing domain for OAuth redirect URIs.
+    # Leave empty when not running behind the Worker.
+    PUBLIC_HOSTS = os.getenv("PUBLIC_HOSTS", "")
+
     # Security
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
@@ -61,6 +67,7 @@ class Config:
     # GitHub OAuth
     GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
     GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+
 
 class DevelopmentConfig(Config):
     """Development configuration."""

@@ -74,12 +74,21 @@ function proxy(request, origin) {
   });
 }
 
-// Tell the origin what hostname the browser actually used, so Flask's
-// ProxyFix can rebuild absolute URLs (OAuth callbacks, url_for(_external=True))
-// against the public domain instead of the Railway backend hostname.
+// Tell the origin what hostname the browser actually used, so Flask can
+// rebuild absolute URLs (OAuth callbacks, url_for(_external=True)) against
+// the public domain instead of the Railway backend hostname.
+//
+// Railway's edge proxy overwrites X-Forwarded-Host with its own hostname
+// before the request reaches the app, so the standard header is useless here.
+// X-Northflow-Host is a private header nothing in between rewrites; Flask only
+// honors it for hosts listed in its PUBLIC_HOSTS setting (see
+// app/middleware.py). X-Forwarded-Host is still set for any other consumer.
+const PUBLIC_HOST_HEADER = "X-Northflow-Host";
+
 function forwardedHeaders(request) {
   const url = new URL(request.url);
   const h = new Headers(request.headers);
+  h.set(PUBLIC_HOST_HEADER, url.host);
   h.set("X-Forwarded-Host", url.host);
   h.set("X-Forwarded-Proto", url.protocol.replace(":", ""));
   return h;
