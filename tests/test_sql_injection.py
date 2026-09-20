@@ -6,12 +6,16 @@ SQL injection attacks by using parameterized queries and stored procedures.
 
 import os
 
+import pytest
 from dotenv import load_dotenv
 
 from app.dal import DatabaseConnection, DatabaseError
 
 # Load environment variables before importing app
 load_dotenv()
+
+# These tests exercise stored procedures against a live MySQL instance.
+pytestmark = pytest.mark.integration
 
 
 def test_stored_procedure_with_malicious_input():
